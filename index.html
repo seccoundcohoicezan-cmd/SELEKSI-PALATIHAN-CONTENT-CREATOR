@@ -30,7 +30,7 @@
           <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
           <span id="officialLabel">Pengumuman Resmi</span>
         </div>
-        <h1 id="mainTitle" class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+        <h1 id="mainTitle" class="text-2xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
           PENGUMUMAN SELEKSI PELATIHAN CONTENT CREATOR
         </h1>
         <div class="flex flex-wrap items-center gap-3 mt-4 text-slate-500 font-medium">
@@ -84,25 +84,45 @@
         <div class="text-sm font-extrabold text-cyan-700 mt-2 leading-relaxed" id="stat-top-meta">-</div>
       </div>
     </section>
-    <section class="mb-8">
-      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 class="font-extrabold text-slate-900 text-lg">Cek Status Mandiri</h2>
-            <p class="text-sm text-slate-500 mt-1">Peserta bisa mencari status dengan nama atau nomor WhatsApp.</p>
-          </div>
-          <a href="./audit_data.html" class="inline-flex items-center justify-center px-4 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition">
-            Buka Panel Audit Data
-          </a>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
-          <input id="selfCheckName" type="text" placeholder="Masukkan nama peserta" class="w-full px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
-          <input id="selfCheckPhone" type="text" placeholder="Atau masukkan nomor WhatsApp" class="w-full px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
-          <button id="selfCheckButton" class="w-full px-4 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">Cek Sekarang</button>
-        </div>
-        <div id="selfCheckResult" class="hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm mt-4"></div>
+    
+<section class="mb-8">
+  <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 md:p-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h2 class="font-extrabold text-slate-900 text-xl">Cek Status Mandiri</h2>
+        <p class="text-sm md:text-base text-slate-500 mt-1">Masukkan nama peserta atau nomor WhatsApp untuk melihat hasil seleksi dengan cepat.</p>
       </div>
-    </section>
+      <a href="./audit_data.html" class="hidden md:inline-flex items-center justify-center px-4 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition">
+        Audit Data
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
+      <input id="selfCheckName" type="text" placeholder="Masukkan nama peserta" class="w-full px-4 py-4 text-base md:text-lg bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
+      <input id="selfCheckPhone" type="text" placeholder="Atau masukkan nomor WhatsApp" class="w-full px-4 py-4 text-base md:text-lg bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
+      <button id="selfCheckButton" class="w-full px-4 py-4 text-base md:text-lg rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">Cek Sekarang</button>
+    </div>
+
+    <div id="selfCheckEmpty" class="hidden mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm md:text-base text-amber-700 font-medium">
+      Data tidak ditemukan. Periksa kembali nama atau nomor WhatsApp yang dimasukkan.
+    </div>
+
+    <div id="selfCheckResult" class="hidden mt-5">
+      <div id="selfCheckCard" class="rounded-[2rem] border p-6 md:p-8 shadow-lg text-center">
+        <p class="text-xs md:text-sm font-black tracking-[0.25em] uppercase text-slate-400">Hasil Seleksi</p>
+        <h3 id="selfCheckResultName" class="mt-3 text-2xl md:text-3xl font-black text-slate-900"></h3>
+        <p id="selfCheckResultSchool" class="mt-2 text-sm md:text-base text-slate-500"></p>
+        <div id="selfCheckResultStatus" class="mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black"></div>
+        <p id="selfCheckResultNote" class="mt-4 text-sm md:text-base text-slate-600 max-w-2xl mx-auto"></p>
+      </div>
+    </div>
+
+    <a href="./audit_data.html" class="mt-4 inline-flex md:hidden items-center justify-center w-full px-4 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition">
+      Audit Data
+    </a>
+  </div>
+</section>
+
     <section class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
       <div id="searchPanel" class="p-6 md:p-8 border-b border-slate-50">
         <div class="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between mb-4">
@@ -178,7 +198,8 @@
         </div>
       </div>
 
-      <div class="overflow-x-auto custom-scrollbar hidden" id="tableWrapper">
+      <div class="px-6 py-4 border-t border-slate-100 text-sm text-slate-500 md:hidden">Untuk pengalaman terbaik di HP, gunakan fitur <strong>Cek Status Mandiri</strong> di atas.</div>
+      <div class="overflow-x-auto custom-scrollbar hidden md:block" id="tableWrapper">
         <table class="w-full text-left border-collapse min-w-[1180px]">
           <thead>
             <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
@@ -287,6 +308,12 @@
       selfCheckPhone: document.getElementById('selfCheckPhone'),
       selfCheckButton: document.getElementById('selfCheckButton'),
       selfCheckResult: document.getElementById('selfCheckResult'),
+      selfCheckEmpty: document.getElementById('selfCheckEmpty'),
+      selfCheckCard: document.getElementById('selfCheckCard'),
+      selfCheckResultName: document.getElementById('selfCheckResultName'),
+      selfCheckResultSchool: document.getElementById('selfCheckResultSchool'),
+      selfCheckResultStatus: document.getElementById('selfCheckResultStatus'),
+      selfCheckResultNote: document.getElementById('selfCheckResultNote'),
 
       searchInput: document.getElementById('searchInput'),
       statusFilter: document.getElementById('statusFilter'),
