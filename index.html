@@ -137,14 +137,14 @@
         </div>
 
         <section id="selfCheckResult" class="hidden mt-5" aria-live="polite">
-          <div id="selfCheckCard" class="rounded-[2rem] border p-5 sm:p-6 md:p-8 shadow-lg text-center">
-            <p class="text-xs md:text-sm font-black tracking-[0.25em] uppercase text-slate-400">Hasil Seleksi</p>
-            <div id="selfCheckResultIcon" class="mt-4 text-4xl" aria-hidden="true">📄</div>
-            <h3 id="selfCheckResultName" class="mt-3 text-2xl md:text-3xl font-black text-slate-900"></h3>
-            <p id="selfCheckResultSchool" class="mt-2 text-sm md:text-base text-slate-500"></p>
+          <div id="selfCheckCard" class="rounded-[2rem] border p-5 sm:p-6 md:p-8 shadow-xl text-center">
+            <p class="text-[11px] md:text-xs font-extrabold tracking-[0.32em] uppercase text-slate-400">Hasil Seleksi</p>
+            <div id="selfCheckResultIcon" class="mt-4 mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/70 text-3xl shadow-sm ring-1 ring-black/5" aria-hidden="true">📄</div>
+            <h3 id="selfCheckResultName" class="mt-5 text-2xl md:text-4xl font-black tracking-tight text-slate-900"></h3>
+            <p id="selfCheckResultSchool" class="mt-3 text-base md:text-lg text-slate-600"></p>
             <p id="selfCheckResultTeacher" class="mt-2 text-sm md:text-base text-slate-500"></p>
-            <div id="selfCheckResultStatus" class="mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black"></div>
-            <p id="selfCheckResultNote" class="mt-4 text-sm md:text-base text-slate-600 max-w-2xl mx-auto"></p>
+            <div id="selfCheckResultStatus" class="mt-6 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black shadow-sm"></div>
+            <p id="selfCheckResultNote" class="mt-5 text-sm md:text-base text-slate-600 max-w-2xl mx-auto"></p>
           </div>
         </section>
 
@@ -196,7 +196,8 @@
     };
 
     const state = {
-      rows: [],
+      allRows: [],
+      publicRows: [],
       headers: [],
       fields: {},
       lastLoadedAt: null,
@@ -268,6 +269,13 @@
       return `${digits.slice(0, 4)}*****${digits.slice(-3)}`;
     }
 
+    function maskTeacherInfo(value) {
+      const raw = cleanText(value);
+      if (!raw) return 'Guru -';
+      const masked = raw.replace(/(?:\+?62|0)?[0-9][0-9\s().-]{7,}[0-9]/g, (match) => maskPhone(match));
+      return `Guru ${masked}`;
+    }
+
     function escapeHtml(text) {
       return (text ?? '')
         .toString()
@@ -306,6 +314,37 @@
 
     function getValue(row, key) {
       return cleanText(key && row ? row[key] : '');
+    }
+
+    function getRowIdentity(row, fields) {
+      const nama = cleanText(getValue(row, fields.nama)).toLowerCase();
+      const kontak = normalizePhone(getValue(row, fields.kontak));
+      const sekolah = cleanText(getValue(row, fields.sekolah)).toLowerCase();
+      if (kontak) return `phone:${kontak}`;
+      return `name:${nama}|school:${sekolah}`;
+    }
+
+    function getRowScore(row, fields) {
+      const values = [fields.nama, fields.kontak, fields.sekolah, fields.kelas, fields.guru, fields.status]
+        .map((field) => cleanText(getValue(row, field)));
+      let score = values.filter(Boolean).length;
+      if (classifyStatus(getValue(row, fields.status)) === 'LOLOS') score += 3;
+      if (cleanText(getValue(row, fields.guru))) score += 1;
+      if (normalizePhone(getValue(row, fields.kontak))) score += 1;
+      return score;
+    }
+
+    function dedupeRowsForPublic(rows, fields) {
+      const map = new Map();
+      for (const row of rows || []) {
+        if (!cleanText(getValue(row, fields.nama))) continue;
+        const key = getRowIdentity(row, fields);
+        const current = map.get(key);
+        if (!current || getRowScore(row, fields) > getRowScore(current, fields)) {
+          map.set(key, row);
+        }
+      }
+      return Array.from(map.values());
     }
 
     async function fetchCsvText(urls) {
@@ -369,7 +408,7 @@
     }
 
     function getCacheKey() {
-      return `landing-cache-raw-${APP_CONFIG.sheetId}-${APP_CONFIG.participantGid}`;
+      return `landing-cache-public-dedup-${APP_CONFIG.sheetId}-${APP_CONFIG.participantGid}`;
     }
 
     function saveCache(payload) {
@@ -401,7 +440,7 @@
         el.cacheText.textContent = 'Sumber data belum tersedia';
         return;
       }
-      el.lastUpdatedText.textContent = `Terakhir dimuat: ${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.rows.length} peserta`;
+      el.lastUpdatedText.textContent = `Terakhir dimuat: ${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.publicRows.length} peserta`;
       el.cacheText.textContent = `Sumber data: ${state.cacheSource} (${state.lastLoadedAt.toLocaleString('id-ID')})`;
     }
 
@@ -436,22 +475,22 @@
       el.selfCheckEmpty.classList.add('hidden');
       el.selfCheckResultName.textContent = nama;
       el.selfCheckResultSchool.textContent = `${sekolah} • Kelas ${kelas}`;
-      el.selfCheckResultTeacher.textContent = `Guru: ${guru}`;
+      el.selfCheckResultTeacher.textContent = maskTeacherInfo(guru);
       el.selfCheckResultIcon.textContent = statusType === 'LOLOS' ? '✅' : statusType === 'TIDAK LOLOS' ? '🙂' : '📄';
 
       if (statusType === 'LOLOS') {
-        el.selfCheckCard.className = 'rounded-[2rem] border border-emerald-200 bg-emerald-50 p-5 sm:p-6 md:p-8 shadow-lg text-center fade-in';
-        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-emerald-600 text-white';
+        el.selfCheckCard.className = 'rounded-[2rem] border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-100 p-5 sm:p-6 md:p-8 shadow-xl text-center fade-in';
+        el.selfCheckResultStatus.className = 'mt-6 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-emerald-600 text-white shadow-sm';
       } else if (statusType === 'TIDAK LOLOS') {
-        el.selfCheckCard.className = 'rounded-[2rem] border border-amber-200 bg-amber-50 p-5 sm:p-6 md:p-8 shadow-lg text-center fade-in';
-        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-amber-500 text-white';
+        el.selfCheckCard.className = 'rounded-[2rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 sm:p-6 md:p-8 shadow-xl text-center fade-in';
+        el.selfCheckResultStatus.className = 'mt-6 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-amber-500 text-white shadow-sm';
       } else {
-        el.selfCheckCard.className = 'rounded-[2rem] border border-slate-200 bg-slate-50 p-5 sm:p-6 md:p-8 shadow-lg text-center fade-in';
-        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-slate-700 text-white';
+        el.selfCheckCard.className = 'rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 p-5 sm:p-6 md:p-8 shadow-xl text-center fade-in';
+        el.selfCheckResultStatus.className = 'mt-6 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-slate-700 text-white shadow-sm';
       }
 
       el.selfCheckResultStatus.textContent = statusRaw;
-      el.selfCheckResultNote.textContent = `WA: ${maskPhone(getValue(row, state.fields.kontak))} • Data ditampilkan mengikuti spreadsheet.`;
+      el.selfCheckResultNote.textContent = `WhatsApp ${maskPhone(getValue(row, state.fields.kontak))}`;
       el.selfCheckResult.classList.remove('hidden');
       el.selfCheckResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -475,10 +514,10 @@
       try {
         let match = null;
         if (phoneQuery && state.fields.kontak) {
-          match = state.rows.find((row) => normalizePhone(getValue(row, state.fields.kontak)) === phoneQuery);
+          match = state.publicRows.find((row) => normalizePhone(getValue(row, state.fields.kontak)) === phoneQuery);
         }
         if (!match && nameQuery && state.fields.nama) {
-          match = state.rows.find((row) => cleanText(getValue(row, state.fields.nama)).toLowerCase() === nameQuery);
+          match = state.publicRows.find((row) => cleanText(getValue(row, state.fields.nama)).toLowerCase() === nameQuery);
         }
         if (!match) {
           showMessage('Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.');
@@ -502,7 +541,7 @@
         const wa = escapeHtml(maskPhone(getValue(row, state.fields.kontak)));
         const sekolah = escapeHtml(getValue(row, state.fields.sekolah) || '-');
         const kelas = escapeHtml(getValue(row, state.fields.kelas) || '-');
-        const guru = escapeHtml(getValue(row, state.fields.guru) || '-');
+        const guru = escapeHtml(maskTeacherInfo(getValue(row, state.fields.guru)).replace(/^Guru\s*/, '') || '-');
         const status = escapeHtml(getValue(row, state.fields.status) || '-');
         return `
           <tr>
@@ -575,7 +614,7 @@
         alert('Tunggu sampai data selesai dimuat.');
         return;
       }
-      if (!state.rows.length) {
+      if (!state.publicRows.length) {
         alert('Data belum dimuat.');
         return;
       }
@@ -591,7 +630,7 @@
       }
 
       printWindow.document.open();
-      printWindow.document.write(buildPdfHtml(state.rows));
+      printWindow.document.write(buildPdfHtml(state.publicRows));
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => printWindow.print(), 500);
@@ -625,10 +664,11 @@
       try {
         if (!forceRefresh) {
           const cached = loadCache();
-          if (cached?.rows?.length) {
-            state.rows = cached.rows;
-            state.headers = cached.headers || Object.keys(cached.rows[0] || {});
+          if (cached?.allRows?.length || cached?.rows?.length) {
+            state.allRows = cached.allRows || cached.rows || [];
+            state.headers = cached.headers || Object.keys((state.allRows[0] || cached.publicRows?.[0] || {}));
             state.fields = cached.fields || buildFieldMap(state.headers);
+            state.publicRows = cached.publicRows || dedupeRowsForPublic(state.allRows, state.fields);
             state.lastLoadedAt = new Date(cached.savedAt);
             state.cacheSource = 'cache lokal';
             updateHeaderInfo();
@@ -645,18 +685,20 @@
         const rows = sanitizeParsedRows(parsed.data);
         const headers = Object.keys(rows[0] || parsed.meta.fields || {});
         const fields = buildFieldMap(headers);
+        const publicRows = dedupeRowsForPublic(rows, fields);
 
-        state.rows = rows;
+        state.allRows = rows;
+        state.publicRows = publicRows;
         state.headers = headers;
         state.fields = fields;
         state.lastLoadedAt = new Date();
         state.cacheSource = 'jaringan';
 
-        saveCache({ rows, headers, fields });
+        saveCache({ allRows: rows, publicRows, headers, fields });
         updateHeaderInfo();
       } catch (error) {
         console.error(error);
-        if (!state.rows.length) {
+        if (!state.allRows.length && !state.publicRows.length) {
           el.lastUpdatedText.textContent = 'Gagal memuat data';
           el.cacheText.textContent = 'Pastikan spreadsheet dapat diakses.';
         }
