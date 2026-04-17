@@ -143,7 +143,7 @@
     const APP_CONFIG = {
       sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
       participantGid: '0',
-      configGid: '',
+      configGid: '825905406',
       maxRows: 2000,
       searchDebounceMs: 180,
       defaultAnnouncement: 'Peserta terseleksi akan langsung ikut pelatihan di tempat (pada hari ini), untuk peserta yang belum lolos bisa mengikuti pelatihan batch dua (pengumuman menyusul), dan bisa mengikuti workshop online content tanggal 15 April jam 20.00.'
@@ -386,7 +386,7 @@
           <tr class="hover:bg-slate-50/80 transition-all cursor-default align-top">
             <td class="px-8 py-6">
               <div class="font-bold text-slate-800 text-base">${escapeHtml(item.nama)}</div>
-              <div class="text-xs text-slate-400 font-medium mt-1">${escapeHtml(item.kontak)}</div>
+              <div class="text-xs text-slate-400 font-medium mt-1">${escapeHtml(maskPhone(item.kontak))}</div>
             </td>
             <td class="px-8 py-6">
               <div class="text-sm font-bold text-slate-700">${escapeHtml(item.sekolah)}</div>
@@ -426,7 +426,7 @@
         <tr>
           <td>${index + 1}</td>
           <td>${escapeHtml(item.nama)}</td>
-          <td>${escapeHtml(item.kontak)}</td>
+          <td>${escapeHtml(maskPhone(item.kontak))}</td>
           <td>${escapeHtml(item.sekolah)}</td>
           <td>${escapeHtml(item.kelas)}</td>
           <td>${escapeHtml(item.guru)}</td>
@@ -523,7 +523,7 @@
           .map((row, index) => mapRow(row, index))
           .filter(Boolean);
 
-        state.participants = dedupeRows(mapped);
+        state.participants = mapped;
 
         if (!state.participants.length) {
           throw new Error('CSV berhasil diambil, tapi tidak ada baris valid yang bisa dibaca. Periksa nama header sheet.');
@@ -533,7 +533,7 @@
         updateStatusOptions();
         renderTable();
 
-        const loadedInfo = `${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.participants.length} peserta aktif`;
+        const loadedInfo = `${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.participants.length} peserta`;
         const clippedInfo = parsed.data.length > APP_CONFIG.maxRows ? ` • dibatasi ${APP_CONFIG.maxRows} baris` : '';
         el.lastUpdatedText.textContent = `Terakhir dimuat: ${loadedInfo}${clippedInfo}`;
       } catch (error) {
