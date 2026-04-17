@@ -36,7 +36,7 @@
         <div class="flex flex-wrap items-center gap-3 mt-4 text-slate-500 font-medium">
           <span class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Data sinkron dari spreadsheet
+            Data sinkron
           </span>
           <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
           <span id="lastUpdatedText" class="text-slate-500">Memuat data terbaru...</span>
@@ -80,7 +80,7 @@
         <div class="text-sm font-extrabold text-indigo-700 mt-2 leading-relaxed" id="stat-top-school">-</div>
       </div>
       <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-cyan-100 col-span-1 xl:col-span-2">
-        <p class="text-xs font-bold text-cyan-500 uppercase tracking-widest">Top Guru / Kelas</p>
+        <p class="text-xs font-bold text-cyan-500 uppercase tracking-widest">Top Guru</p>
         <div class="text-sm font-extrabold text-cyan-700 mt-2 leading-relaxed" id="stat-top-meta">-</div>
       </div>
     </section>
@@ -185,8 +185,7 @@
               <th class="px-8 py-5">Peserta</th>
               <th class="px-8 py-5">Sekolah</th>
               <th class="px-8 py-5">Guru</th>
-              <th class="px-8 py-5">Meta</th>
-              <th class="px-8 py-5">Status</th>
+                            <th class="px-8 py-5">Status</th>
             </tr>
           </thead>
           <tbody id="tableBody" class="divide-y divide-slate-50"></tbody>
@@ -221,7 +220,7 @@
 
       <div class="p-6 bg-slate-50/50 border-t border-slate-50 text-center">
         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">
-          Sinkronisasi Google Spreadsheet • Data bersih otomatis • Pagination • Cache lokal
+          By Duta Teladan Universitas STEKOM
         </p>
       </div>
     </section>
@@ -628,10 +627,9 @@
       el.statTidakLolos.textContent = tidakLolosCount;
       el.statSekolah.textContent = uniqueSchools.size;
       el.statTopSchool.textContent = topSchool ? `${topSchool[0]} (${topSchool[1]})` : '-';
-      el.statTopMeta.innerHTML = `
-        <div>${topGuru ? `Guru: ${escapeHtml(stripPhoneFromText(topGuru[0]))}` : 'Guru: -'}</div>
-        <div class="mt-1">${topKelas ? `Kelas: ${escapeHtml(topKelas[0])} (${topKelas[1]})` : 'Kelas: -'}</div>
-      `;
+      el.statTopMeta.innerHTML = topGuru
+        ? `<div>Guru: ${escapeHtml(stripPhoneFromText(topGuru[0]))} (${topGuru[1]})</div>`
+        : '<div>Guru: -</div>';
     }
 
     function paginate(items) {
@@ -848,10 +846,6 @@
             </td>
             <td class="px-8 py-6">
               <div class="text-sm text-slate-500 font-medium max-w-xs leading-relaxed">${highlightText(stripPhoneFromText(item.guru || '-'), query)}</div>
-            </td>
-            <td class="px-8 py-6">
-              <div class="text-xs text-slate-400 font-medium">Baris Spreadsheet #${item._rowNumber}</div>
-              <div class="text-xs text-slate-500 mt-2">${isPhoneLikelyValid(item.kontak) ? 'Nomor peserta valid' : 'Nomor peserta perlu dicek'}</div>
             </td>
             <td class="px-8 py-6">
               <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full ${style.badge} text-xs font-black ring-1 whitespace-nowrap">
