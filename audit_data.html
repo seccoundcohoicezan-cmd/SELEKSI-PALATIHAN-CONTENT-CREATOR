@@ -23,7 +23,7 @@
       </div>
       <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Masuk ke Panel Audit</h1>
       <p class="text-slate-500 mt-3 leading-relaxed">
-        Masukkan sandi admin untuk membuka panel audit. Setelah masuk, kamu bisa beralih antara mode publik dan mode admin.
+        Masukkan sandi admin untuk membuka panel audit internal.
       </p>
 
       <form id="loginForm" class="mt-6 space-y-4">
@@ -66,7 +66,7 @@
           AUDIT DATA SPREADSHEET
         </h1>
         <p class="text-slate-500 mt-4 max-w-3xl">
-          Halaman ini dipisah dari landing utama. Gunakan <strong>Mode Publik</strong> untuk tampilan aman dengan nomor tersensor, atau aktifkan <strong>Mode Admin</strong> untuk melihat nomor peserta dan nomor guru penuh.
+          Halaman ini adalah panel audit admin. Semua data ditampilkan penuh untuk kebutuhan pengecekan dan verifikasi internal.
         </p>
       </div>
 
@@ -74,10 +74,7 @@
         <a href="./index.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
           Kembali ke Landing
         </a>
-        <button id="toggleModeButton" class="px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all shadow-sm">
-          Mode: Publik
-        </button>
-        <button id="logoutButton" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
+<button id="logoutButton" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
           Keluar
         </button>
         <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
@@ -129,7 +126,7 @@
         <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
           <div>
             <h2 class="font-extrabold text-slate-900 text-lg">Tabel Audit Data</h2>
-            <p class="text-sm text-slate-500 mt-1">Nomor peserta dan nomor guru akan mengikuti mode aktif.</p>
+            <p class="text-sm text-slate-500 mt-1">Nomor peserta dan nomor guru ditampilkan penuh untuk audit internal.</p>
           </div>
           <div class="text-sm font-bold text-slate-500" id="tableInfo">0 baris</div>
         </div>
@@ -191,7 +188,6 @@
 <script>
 const ADMIN_PASSWORD = '606';
 const SESSION_KEY = 'audit_admin_access';
-const MODE_KEY = 'audit_view_mode';
 
 const APP_CONFIG = {
   sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
@@ -201,7 +197,6 @@ const APP_CONFIG = {
 };
 
 const state = {
-  isAdminMode: false,
   rows: [],
   filteredRows: [],
   duplicateKeys: new Set(),
@@ -219,7 +214,6 @@ const el = {
   loginForm: document.getElementById('loginForm'),
   passwordInput: document.getElementById('passwordInput'),
   loginError: document.getElementById('loginError'),
-  toggleModeButton: document.getElementById('toggleModeButton'),
   logoutButton: document.getElementById('logoutButton'),
   refreshButton: document.getElementById('refreshButton'),
   searchInput: document.getElementById('searchInput'),
@@ -266,15 +260,7 @@ function isPhoneLikelyValid(value) {
 }
 function maskPhone(value) {
   const raw = cleanText(value);
-  const digits = raw.replace(/\D/g, '');
-  if (!digits) return '-';
-  if (state.isAdminMode) return raw;
-  if (digits.length <= 4) return '*'.repeat(digits.length);
-  if (digits.length <= 7) return `${digits.slice(0, 2)}${'*'.repeat(Math.max(1, digits.length - 4))}${digits.slice(-2)}`;
-  const start = digits.slice(0, 4);
-  const end = digits.slice(-3);
-  const middle = '*'.repeat(Math.max(3, digits.length - 7));
-  return `${start}${middle}${end}`;
+  return raw || '-';
 }
 function extractPhoneFromText(value) {
   const raw = cleanText(value);
@@ -397,22 +383,13 @@ function setError(message = '') {
     el.emptyState.classList.add('hidden');
   }
 }
-function setMode(isAdmin) {
-  state.isAdminMode = isAdmin;
-  localStorage.setItem(MODE_KEY, isAdmin ? 'admin' : 'public');
-  el.toggleModeButton.textContent = isAdmin ? 'Mode: Admin' : 'Mode: Publik';
-  el.toggleModeButton.className = isAdmin
-    ? 'px-5 py-3 rounded-2xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-all shadow-sm'
-    : 'px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all shadow-sm';
-  renderTable();
-}
+
 function enterApp() {
   el.loginScreen.classList.add('hidden');
   el.appShell.classList.remove('hidden');
 }
 function logout() {
   sessionStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem(MODE_KEY);
   window.location.reload();
 }
 function renderAuditSummary(rawRows, mappedData) {
@@ -516,7 +493,7 @@ function renderTable() {
   el.tableBody.innerHTML = html;
   el.tableWrapper.classList.remove('hidden');
   el.emptyState.classList.add('hidden');
-  el.tableInfo.textContent = `${state.filteredRows.length} dari ${state.rows.length} baris • ${state.isAdminMode ? 'Mode Admin' : 'Mode Publik'}`;
+  el.tableInfo.textContent = `${state.filteredRows.length} dari ${state.rows.length} baris`;
 
   renderAuditSummary(state.rows, state.rows);
 }
@@ -547,8 +524,6 @@ function initAuth() {
 
   if (hasAccess) {
     enterApp();
-    const savedMode = localStorage.getItem(MODE_KEY);
-    setMode(savedMode === 'admin');
     loadAudit();
     return;
   }
@@ -561,7 +536,6 @@ function initAuth() {
       sessionStorage.setItem(SESSION_KEY, 'true');
       el.loginError.classList.add('hidden');
       enterApp();
-      setMode(false);
       loadAudit();
       return;
     }
@@ -572,7 +546,6 @@ function initAuth() {
   });
 }
 function attachEvents() {
-  el.toggleModeButton.addEventListener('click', () => setMode(!state.isAdminMode));
   el.logoutButton.addEventListener('click', logout);
   el.refreshButton.addEventListener('click', loadAudit);
   el.searchInput.addEventListener('input', scheduleSearchRender);
