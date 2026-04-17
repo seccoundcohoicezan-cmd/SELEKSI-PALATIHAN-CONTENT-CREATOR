@@ -3,19 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PENGUMUMAN SELEKSI PELATIHAN CONTENT CREATOR</title>
+  <title>Pengumuman Seleksi Pelatihan Content Creator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root { color-scheme: light; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glass-card { background: rgba(255,255,255,0.82); backdrop-filter: blur(12px); }
     .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    @media print {
+      body { background: white !important; }
+      #appShell, #actionBar, #searchPanel, #refreshButton, #exportPdfButton { display: none !important; }
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
-  <div class="max-w-7xl mx-auto px-4 pt-8 md:pt-12">
+  <div id="appShell" class="max-w-7xl mx-auto px-4 pt-8 md:pt-12">
     <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
       <div>
         <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm mb-4 text-xs font-bold tracking-[0.2em] uppercase text-emerald-600">
@@ -39,9 +45,8 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 shrink-0 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <div>
           <h3 class="font-bold text-lg mb-1 italic">Pemberitahuan</h3>
-          <p class="text-emerald-50 text-sm leading-relaxed">
-            Peserta terseleksi akan langsung ikut pelatihan di tempat (pada hari ini), untuk peserta yang belum lolos bisa mengikuti pelatihan batch dua (pengumuman menyusul), dan bisa mengikuti workshop online content tanggal 15 April jam 20.00.
-          </p>
+          <p id="announcementText" class="text-emerald-50 text-sm leading-relaxed">Memuat pengumuman...</p>
+          <p id="announcementHint" class="text-emerald-100/80 text-xs mt-3">Pengumuman bisa diubah dari sheet CONFIG tanpa deploy ulang.</p>
         </div>
       </div>
     </header>
@@ -56,8 +61,8 @@
         <div class="text-4xl font-black text-emerald-600 mt-1" id="stat-lolos">0</div>
       </div>
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-amber-100 ring-4 ring-amber-50/50">
-        <p class="text-xs font-bold text-amber-500 uppercase tracking-widest">Status Lainnya</p>
-        <div class="text-4xl font-black text-amber-600 mt-1" id="stat-lainnya">0</div>
+        <p class="text-xs font-bold text-amber-500 uppercase tracking-widest">Status Tidak Lolos</p>
+        <div class="text-4xl font-black text-amber-600 mt-1" id="stat-tidak-lolos">0</div>
       </div>
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-sky-100 ring-4 ring-sky-50/50">
         <p class="text-xs font-bold text-sky-500 uppercase tracking-widest">Total Sekolah</p>
@@ -66,18 +71,22 @@
     </section>
 
     <section class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-      <div class="p-6 md:p-8 border-b border-slate-50 flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
+      <div id="searchPanel" class="p-6 md:p-8 border-b border-slate-50 flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
         <div class="relative w-full xl:max-w-lg">
           <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="searchInput" placeholder="Cari nama, WhatsApp, sekolah, atau guru..." class="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white transition-all outline-none text-slate-700 font-medium shadow-inner" />
+          <p class="text-xs text-slate-400 mt-2 ml-1">Pencarian cepat aktif dengan debounce agar tetap ringan untuk 2.000 data.</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
+        <div id="actionBar" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
           <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 w-full sm:w-auto">
             <svg xmlns="http://www.w3.org/2000/svg" class="text-slate-400 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             <select id="statusFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full min-w-[180px]"></select>
           </div>
 
+          <button id="exportPdfButton" class="px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all shadow-sm">
+            Export PDF
+          </button>
           <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
             Muat Ulang Data
           </button>
@@ -124,32 +133,53 @@
 
       <div class="p-6 bg-slate-50/50 border-t border-slate-50 text-center">
         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">
-          Sinkronisasi Google Spreadsheet • Pengumuman Seleksi Pelatihan Content Creator
+          Sinkronisasi Google Spreadsheet • Stabil untuk dataset besar hingga 2.000 baris
         </p>
       </div>
     </section>
   </div>
 
   <script>
-    const SHEET_ID = '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI';
-    const SHEET_GID = '0';
-    const CSV_URLS = [
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`,
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`
+    const APP_CONFIG = {
+      sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
+      participantGid: '0',
+      configGid: '',
+      maxRows: 2000,
+      searchDebounceMs: 180,
+      defaultAnnouncement: 'Peserta terseleksi akan langsung ikut pelatihan di tempat (pada hari ini), untuk peserta yang belum lolos bisa mengikuti pelatihan batch dua (pengumuman menyusul), dan bisa mengikuti workshop online content tanggal 15 April jam 20.00.'
+    };
+
+    const state = {
+      participants: [],
+      filteredParticipants: [],
+      lastLoadedAt: null,
+      searchTimer: null
+    };
+
+    const el = {
+      tableBody: document.getElementById('tableBody'),
+      tableWrapper: document.getElementById('tableWrapper'),
+      searchInput: document.getElementById('searchInput'),
+      statusFilter: document.getElementById('statusFilter'),
+      emptyState: document.getElementById('emptyState'),
+      loadingState: document.getElementById('loadingState'),
+      errorState: document.getElementById('errorState'),
+      errorMessage: document.getElementById('errorMessage'),
+      refreshButton: document.getElementById('refreshButton'),
+      exportPdfButton: document.getElementById('exportPdfButton'),
+      lastUpdatedText: document.getElementById('lastUpdatedText'),
+      announcementText: document.getElementById('announcementText'),
+      announcementHint: document.getElementById('announcementHint'),
+      statTotal: document.getElementById('stat-total'),
+      statLolos: document.getElementById('stat-lolos'),
+      statTidakLolos: document.getElementById('stat-tidak-lolos'),
+      statSekolah: document.getElementById('stat-sekolah')
+    };
+
+    const participantCsvUrls = [
+      `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/export?format=csv&gid=${APP_CONFIG.participantGid}`,
+      `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/gviz/tq?tqx=out:csv&gid=${APP_CONFIG.participantGid}`
     ];
-
-    let participants = [];
-
-    const tableBody = document.getElementById('tableBody');
-    const tableWrapper = document.getElementById('tableWrapper');
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const emptyState = document.getElementById('emptyState');
-    const loadingState = document.getElementById('loadingState');
-    const errorState = document.getElementById('errorState');
-    const errorMessage = document.getElementById('errorMessage');
-    const refreshButton = document.getElementById('refreshButton');
-    const lastUpdatedText = document.getElementById('lastUpdatedText');
 
     function cleanText(value) {
       return (value ?? '')
@@ -163,26 +193,6 @@
       return cleanText(value).toLowerCase();
     }
 
-    function pick(row, aliases, fallback = '-') {
-      const keys = Object.keys(row || {});
-      for (const alias of aliases) {
-        const match = keys.find((key) => normalizeHeader(key) === normalizeHeader(alias));
-        if (match) {
-          const val = cleanText(row[match]);
-          if (val) return val;
-        }
-      }
-      return fallback;
-    }
-
-    function normalizeStatus(value) {
-      const status = cleanText(value).toUpperCase();
-      if (!status) return 'TANPA STATUS';
-      if (status.includes('LOLOS')) return status.includes('TIDAK') ? 'TIDAK LOLOS' : 'LOLOS';
-      if (status === 'TID') return 'TIDAK LOLOS';
-      return status;
-    }
-
     function escapeHtml(text) {
       return (text ?? '')
         .toString()
@@ -193,32 +203,78 @@
         .replace(/'/g, '&#039;');
     }
 
-    function getStatusStyle(status) {
-      if (status === 'LOLOS') {
-        return {
-          badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-          icon: '<svg class="w-3.5 h-3.5 fill-emerald-500 text-white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>'
-        };
+    function pick(row, aliases, fallback = '-') {
+      const keys = Object.keys(row || {});
+      for (const alias of aliases) {
+        const matchedKey = keys.find((key) => normalizeHeader(key) === normalizeHeader(alias));
+        if (matchedKey) {
+          const value = cleanText(row[matchedKey]);
+          if (value) return value;
+        }
       }
-      return {
-        badge: 'bg-amber-50 text-amber-700 ring-amber-200',
-        icon: '<svg class="w-3.5 h-3.5 fill-amber-500 text-white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>'
-      };
+      return fallback;
+    }
+
+    function normalizeStatus(value) {
+      const status = cleanText(value).toUpperCase();
+      if (!status) return 'TIDAK LOLOS';
+      if (status.includes('TIDAK')) return 'TIDAK LOLOS';
+      if (status === 'TID') return 'TIDAK LOLOS';
+      if (status.includes('LOLOS')) return 'LOLOS';
+      return 'TIDAK LOLOS';
+    }
+
+    function getStatusStyle(status) {
+      return status === 'LOLOS'
+        ? {
+            badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+            icon: '<svg class="w-3.5 h-3.5 fill-emerald-500 text-white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd" /></svg>'
+          }
+        : {
+            badge: 'bg-amber-50 text-amber-700 ring-amber-200',
+            icon: '<svg class="w-3.5 h-3.5 fill-amber-500 text-white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 0 0-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 1 0 1.414 1.414L10 11.414l1.293 1.293a1 1 0 0 0 1.414-1.414L11.414 10l1.293-1.293a1 1 0 0 0-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>'
+          };
+    }
+
+    function setLoadingState(isLoading) {
+      el.loadingState.classList.toggle('hidden', !isLoading);
+      el.refreshButton.disabled = isLoading;
+      el.refreshButton.classList.toggle('opacity-60', isLoading);
+      el.refreshButton.classList.toggle('cursor-not-allowed', isLoading);
+    }
+
+    function setError(message = '') {
+      const hasError = Boolean(message);
+      el.errorState.classList.toggle('hidden', !hasError);
+      el.errorMessage.textContent = message;
+      if (hasError) {
+        el.tableWrapper.classList.add('hidden');
+        el.emptyState.classList.add('hidden');
+      }
+    }
+
+    function buildSearchIndex(item) {
+      return [item.nama, item.kontak, item.sekolah, item.kelas, item.guru, item.status]
+        .join(' ')
+        .toLowerCase();
     }
 
     function mapRow(row, index) {
       const nama = pick(row, ['Nama', 'nama'], '');
       if (!nama) return null;
 
-      return {
-        _rowIndex: index + 1,
+      const mapped = {
+        _rowNumber: index + 1,
         nama,
         kontak: pick(row, ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'Whatsapp', 'WA']),
         sekolah: pick(row, ['Asal Sekolah', 'Sekolah']),
         kelas: pick(row, ['Kelas']),
         guru: pick(row, ['Pihak Guru yang Mengajak Kamu Daftar', 'Guru', 'Nama Guru']),
-        status: normalizeStatus(pick(row, ['STATUS', 'Status'], 'TANPA STATUS'))
+        status: normalizeStatus(pick(row, ['STATUS', 'Status'], 'TIDAK LOLOS'))
       };
+
+      mapped.searchIndex = buildSearchIndex(mapped);
+      return mapped;
     }
 
     function dedupeRows(data) {
@@ -230,52 +286,101 @@
       return Array.from(map.values());
     }
 
-    function updateStats(data) {
-      const uniqueSchools = new Set(data.map(item => item.sekolah).filter(Boolean).filter(s => s !== '-'));
-      const lolosCount = data.filter(item => item.status === 'LOLOS').length;
-
-      document.getElementById('stat-total').innerText = data.length;
-      document.getElementById('stat-lolos').innerText = lolosCount;
-      document.getElementById('stat-lainnya').innerText = data.length - lolosCount;
-      document.getElementById('stat-sekolah').innerText = uniqueSchools.size;
+    async function fetchCsvText(urls) {
+      let lastError = null;
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { cache: 'no-store' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const text = await response.text();
+          if (!text || text.trim().startsWith('<!DOCTYPE html')) {
+            throw new Error('Respon bukan CSV');
+          }
+          return text;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error('CSV Google Sheets tidak bisa diambil');
     }
 
-    function updateStatusOptions(data) {
-      const statuses = ['Semua', ...new Set(data.map(item => item.status))];
-      const currentValue = statusFilter.value || 'Semua';
-      statusFilter.innerHTML = statuses
-        .map(status => `<option value="${escapeHtml(status)}">${escapeHtml(status === 'Semua' ? 'Semua Status' : status)}</option>`)
-        .join('');
-
-      if (statuses.includes(currentValue)) statusFilter.value = currentValue;
-    }
-
-    function renderTable() {
-      const searchTerm = searchInput.value.toLowerCase().trim();
-      const filterValue = statusFilter.value || 'Semua';
-
-      const filtered = participants.filter(item => {
-        const haystack = [item.nama, item.kontak, item.sekolah, item.kelas, item.guru, item.status]
-          .join(' ')
-          .toLowerCase();
-        const matchesSearch = haystack.includes(searchTerm);
-        const matchesFilter = filterValue === 'Semua' || item.status === filterValue;
-        return matchesSearch && matchesFilter;
-      });
-
-      tableBody.innerHTML = '';
-      updateStats(filtered);
-
-      if (filtered.length === 0) {
-        tableWrapper.classList.add('hidden');
-        emptyState.classList.remove('hidden');
+    async function loadAnnouncement() {
+      el.announcementText.textContent = APP_CONFIG.defaultAnnouncement;
+      if (!APP_CONFIG.configGid) {
+        el.announcementHint.textContent = 'Isi configGid jika ingin pengumuman dibaca dari sheet CONFIG.';
         return;
       }
 
-      emptyState.classList.add('hidden');
-      tableWrapper.classList.remove('hidden');
+      const configUrls = [
+        `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/export?format=csv&gid=${APP_CONFIG.configGid}`,
+        `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/gviz/tq?tqx=out:csv&gid=${APP_CONFIG.configGid}`
+      ];
 
-      const html = filtered.map(item => {
+      try {
+        const csvText = await fetchCsvText(configUrls);
+        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: 'greedy' });
+        const configMap = new Map();
+
+        for (const row of parsed.data || []) {
+          const key = cleanText(row.KEY || row.Key || row.key);
+          const value = cleanText(row.VALUE || row.Value || row.value);
+          if (key) configMap.set(key.toUpperCase(), value);
+        }
+
+        const announcement = configMap.get('PEMBERITAHUAN') || configMap.get('ANNOUNCEMENT');
+        if (announcement) {
+          el.announcementText.textContent = announcement;
+          el.announcementHint.textContent = 'Pengumuman aktif dibaca dari sheet CONFIG.';
+        }
+      } catch (error) {
+        console.warn('Gagal memuat CONFIG:', error);
+        el.announcementHint.textContent = 'CONFIG belum aktif. Pengumuman memakai teks default di file.';
+      }
+    }
+
+    function updateStatusOptions() {
+      const options = ['Semua', 'LOLOS', 'TIDAK LOLOS'];
+      const currentValue = el.statusFilter.value || 'Semua';
+      el.statusFilter.innerHTML = options
+        .map((status) => `<option value="${escapeHtml(status)}">${escapeHtml(status === 'Semua' ? 'Semua Status' : status)}</option>`)
+        .join('');
+      el.statusFilter.value = options.includes(currentValue) ? currentValue : 'Semua';
+    }
+
+    function updateStats(data) {
+      const uniqueSchools = new Set(data.map((item) => item.sekolah).filter((school) => school && school !== '-'));
+      const lolosCount = data.filter((item) => item.status === 'LOLOS').length;
+      const tidakLolosCount = data.filter((item) => item.status === 'TIDAK LOLOS').length;
+
+      el.statTotal.textContent = data.length;
+      el.statLolos.textContent = lolosCount;
+      el.statTidakLolos.textContent = tidakLolosCount;
+      el.statSekolah.textContent = uniqueSchools.size;
+    }
+
+    function getFilteredParticipants() {
+      const searchTerm = cleanText(el.searchInput.value).toLowerCase();
+      const selectedStatus = el.statusFilter.value || 'Semua';
+
+      return state.participants.filter((item) => {
+        const matchesStatus = selectedStatus === 'Semua' || item.status === selectedStatus;
+        const matchesSearch = !searchTerm || item.searchIndex.includes(searchTerm);
+        return matchesStatus && matchesSearch;
+      });
+    }
+
+    function renderTable() {
+      state.filteredParticipants = getFilteredParticipants();
+      updateStats(state.filteredParticipants);
+      el.tableBody.innerHTML = '';
+
+      if (!state.filteredParticipants.length) {
+        el.tableWrapper.classList.add('hidden');
+        el.emptyState.classList.remove('hidden');
+        return;
+      }
+
+      const html = state.filteredParticipants.map((item) => {
         const style = getStatusStyle(item.status);
         return `
           <tr class="hover:bg-slate-50/80 transition-all cursor-default align-top">
@@ -298,77 +403,166 @@
           </tr>`;
       }).join('');
 
-      tableBody.innerHTML = html;
+      el.tableBody.innerHTML = html;
+      el.emptyState.classList.add('hidden');
+      el.tableWrapper.classList.remove('hidden');
     }
 
-    async function fetchCsvText() {
-      let lastError = null;
-      for (const url of CSV_URLS) {
-        try {
-          const response = await fetch(url, { cache: 'no-store' });
-          if (!response.ok) throw new Error(`HTTP ${response.status} dari ${url}`);
-          const text = await response.text();
-          if (!text || text.trim().startsWith('<!DOCTYPE html')) {
-            throw new Error(`Respon bukan CSV dari ${url}`);
-          }
-          return text;
-        } catch (err) {
-          lastError = err;
-        }
+    function scheduleRender() {
+      clearTimeout(state.searchTimer);
+      state.searchTimer = setTimeout(() => {
+        window.requestAnimationFrame(renderTable);
+      }, APP_CONFIG.searchDebounceMs);
+    }
+
+    function buildPdfHtml(rows) {
+      const generatedAt = new Date().toLocaleString('id-ID');
+      const total = rows.length;
+      const lolos = rows.filter((item) => item.status === 'LOLOS').length;
+      const tidakLolos = total - lolos;
+      const announcement = escapeHtml(el.announcementText.textContent);
+
+      const rowHtml = rows.map((item, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(item.nama)}</td>
+          <td>${escapeHtml(item.kontak)}</td>
+          <td>${escapeHtml(item.sekolah)}</td>
+          <td>${escapeHtml(item.kelas)}</td>
+          <td>${escapeHtml(item.guru)}</td>
+          <td>${escapeHtml(item.status)}</td>
+        </tr>`).join('');
+
+      return `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<title>Pengumuman Resmi</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 28px; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  .meta { color: #475569; font-size: 12px; margin-bottom: 18px; }
+  .notice { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 16px; padding: 16px; margin-bottom: 18px; line-height: 1.6; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+  .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; }
+  .label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .08em; }
+  .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { border: 1px solid #e2e8f0; padding: 8px; vertical-align: top; }
+  th { background: #f8fafc; text-align: left; }
+  @media print {
+    body { margin: 16px; }
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    tr { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <h1>PENGUMUMAN SELEKSI PELATIHAN CONTENT CREATOR</h1>
+  <div class="meta">Dicetak: ${generatedAt} • Total data: ${total}</div>
+  <div class="notice"><strong>Pemberitahuan:</strong><br>${announcement}</div>
+  <div class="stats">
+    <div class="card"><div class="label">Total Peserta</div><div class="value">${total}</div></div>
+    <div class="card"><div class="label">Lolos</div><div class="value">${lolos}</div></div>
+    <div class="card"><div class="label">Tidak Lolos</div><div class="value">${tidakLolos}</div></div>
+    <div class="card"><div class="label">Total Sekolah</div><div class="value">${new Set(rows.map((item) => item.sekolah).filter(Boolean)).size}</div></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Nama</th>
+        <th>WhatsApp</th>
+        <th>Sekolah</th>
+        <th>Kelas</th>
+        <th>Guru</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>${rowHtml}</tbody>
+  </table>
+</body>
+</html>`;
+    }
+
+    function exportPdf() {
+      if (!state.filteredParticipants.length) {
+        alert('Tidak ada data yang bisa diexport.');
+        return;
       }
-      throw lastError || new Error('Gagal mengambil CSV dari Google Sheets');
+
+      const printWindow = window.open('', '_blank', 'width=1200,height=900');
+      if (!printWindow) {
+        alert('Popup diblokir browser. Izinkan popup untuk export PDF.');
+        return;
+      }
+
+      printWindow.document.open();
+      printWindow.document.write(buildPdfHtml(state.filteredParticipants));
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 500);
     }
 
     async function loadSpreadsheetData() {
-      loadingState.classList.remove('hidden');
-      errorState.classList.add('hidden');
-      emptyState.classList.add('hidden');
-      tableWrapper.classList.add('hidden');
-      refreshButton.disabled = true;
-      refreshButton.classList.add('opacity-60', 'cursor-not-allowed');
+      setLoadingState(true);
+      setError('');
+      el.emptyState.classList.add('hidden');
+      el.tableWrapper.classList.add('hidden');
 
       try {
-        const csvText = await fetchCsvText();
+        const csvText = await fetchCsvText(participantCsvUrls);
         const parsed = Papa.parse(csvText, {
           header: true,
           skipEmptyLines: 'greedy',
           dynamicTyping: false
         });
 
-        const mapped = parsed.data
+        const mapped = (parsed.data || [])
+          .slice(0, APP_CONFIG.maxRows)
           .map((row, index) => mapRow(row, index))
           .filter(Boolean);
 
-        participants = dedupeRows(mapped);
+        state.participants = dedupeRows(mapped);
 
-        if (!participants.length) {
-          throw new Error('CSV berhasil diambil, tetapi tidak ada baris valid yang bisa dibaca. Cek nama header di spreadsheet.');
+        if (!state.participants.length) {
+          throw new Error('CSV berhasil diambil, tapi tidak ada baris valid yang bisa dibaca. Periksa nama header sheet.');
         }
 
-        updateStatusOptions(participants);
+        state.lastLoadedAt = new Date();
+        updateStatusOptions();
         renderTable();
 
-        const now = new Date();
-        lastUpdatedText.textContent = `Terakhir dimuat: ${now.toLocaleString('id-ID')} • ${participants.length} peserta aktif`;
+        const loadedInfo = `${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.participants.length} peserta aktif`;
+        const clippedInfo = parsed.data.length > APP_CONFIG.maxRows ? ` • dibatasi ${APP_CONFIG.maxRows} baris` : '';
+        el.lastUpdatedText.textContent = `Terakhir dimuat: ${loadedInfo}${clippedInfo}`;
       } catch (error) {
         console.error(error);
-        participants = [];
-        updateStatusOptions([]);
+        state.participants = [];
+        state.filteredParticipants = [];
+        updateStatusOptions();
         updateStats([]);
-        errorState.classList.remove('hidden');
-        errorMessage.textContent = `Gagal sinkron ke spreadsheet. Penyebab paling umum: spreadsheet belum publish/public, ada perubahan nama header, atau ada baris CSV yang rusak. Detail: ${error.message}`;
+        setError(`Gagal sinkron ke spreadsheet. Penyebab paling umum: spreadsheet belum public/publish, nama header berubah, atau ada baris rusak. Detail: ${error.message}`);
       } finally {
-        loadingState.classList.add('hidden');
-        refreshButton.disabled = false;
-        refreshButton.classList.remove('opacity-60', 'cursor-not-allowed');
+        setLoadingState(false);
       }
     }
 
-    searchInput.addEventListener('input', renderTable);
-    statusFilter.addEventListener('change', renderTable);
-    refreshButton.addEventListener('click', loadSpreadsheetData);
+    function attachEvents() {
+      el.searchInput.addEventListener('input', scheduleRender);
+      el.statusFilter.addEventListener('change', renderTable);
+      el.refreshButton.addEventListener('click', loadSpreadsheetData);
+      el.exportPdfButton.addEventListener('click', exportPdf);
+    }
 
-    loadSpreadsheetData();
+    async function init() {
+      updateStatusOptions();
+      attachEvents();
+      await loadAnnouncement();
+      await loadSpreadsheetData();
+    }
+
+    init();
   </script>
 </body>
 </html>
