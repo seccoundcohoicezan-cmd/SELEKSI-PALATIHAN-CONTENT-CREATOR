@@ -9,10 +9,53 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
-  <div class="max-w-7xl mx-auto px-4 pt-8 md:pt-12">
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-md bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-8">
+      <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm mb-5 text-xs font-bold tracking-[0.2em] uppercase text-rose-600">
+        <span class="w-2 h-2 bg-rose-500 rounded-full"></span>
+        Akses Admin
+      </div>
+      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Masuk ke Panel Audit</h1>
+      <p class="text-slate-500 mt-3 leading-relaxed">
+        Masukkan sandi admin untuk membuka panel audit. Setelah masuk, kamu bisa beralih antara mode publik dan mode admin.
+      </p>
+
+      <form id="loginForm" class="mt-6 space-y-4">
+        <div>
+          <label for="passwordInput" class="block text-sm font-bold text-slate-700 mb-2">Sandi</label>
+          <input
+            id="passwordInput"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Masukkan sandi admin"
+            class="w-full px-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-rose-500"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full px-5 py-4 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm"
+        >
+          Masuk
+        </button>
+      </form>
+
+      <p id="loginError" class="hidden mt-4 text-sm font-medium text-rose-600">
+        Sandi salah. Coba lagi.
+      </p>
+
+      <div class="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-4 text-sm text-slate-500">
+        Default setelah masuk adalah <strong>Mode Publik</strong> agar nomor tetap tersensor. Aktifkan <strong>Mode Admin</strong> bila ingin melihat nomor penuh.
+      </div>
+    </div>
+  </div>
+
+  <div id="appShell" class="hidden max-w-7xl mx-auto px-4 pt-8 md:pt-12">
     <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
       <div>
         <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm mb-4 text-xs font-bold tracking-[0.2em] uppercase text-rose-600">
@@ -22,60 +65,129 @@
         <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
           AUDIT DATA SPREADSHEET
         </h1>
-        <p class="text-slate-500 mt-4 max-w-2xl">Halaman ini dipisah dari landing utama agar tampilan publik tetap bersih. Audit membaca data mentah spreadsheet untuk mendeteksi nomor bermasalah, status kosong, header asing, dan contoh duplikat.</p>
+        <p class="text-slate-500 mt-4 max-w-3xl">
+          Halaman ini dipisah dari landing utama. Gunakan <strong>Mode Publik</strong> untuk tampilan aman dengan nomor tersensor, atau aktifkan <strong>Mode Admin</strong> untuk melihat nomor penuh.
+        </p>
       </div>
-      <div class="flex gap-3">
-        <a href="./index.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">Kembali ke Landing</a>
-        <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">Muat Ulang Audit</button>
+
+      <div class="flex flex-wrap gap-3">
+        <a href="./index.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
+          Kembali ke Landing
+        </a>
+        <button id="toggleModeButton" class="px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all shadow-sm">
+          Mode: Publik
+        </button>
+        <button id="logoutButton" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
+          Keluar
+        </button>
+        <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
+          Muat Ulang Audit
+        </button>
       </div>
     </header>
 
     <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nomor Tidak Valid</p><div class="text-4xl font-black text-slate-900 mt-1" id="audit-invalid-phone">0</div></div>
-      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Status Kosong</p><div class="text-4xl font-black text-slate-900 mt-1" id="audit-empty-status">0</div></div>
-      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nama Kosong</p><div class="text-4xl font-black text-slate-900 mt-1" id="audit-missing-name">0</div></div>
-      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Header Asing</p><div class="text-4xl font-black text-slate-900 mt-1" id="audit-unknown-header">0</div></div>
-      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-rose-100"><p class="text-xs font-bold text-rose-500 uppercase tracking-widest">Contoh Duplikat</p><div class="text-4xl font-black text-rose-600 mt-1" id="audit-duplicate">0</div></div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nomor Tidak Valid</p>
+        <div class="text-4xl font-black text-slate-900 mt-1" id="audit-invalid-phone">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Status Kosong</p>
+        <div class="text-4xl font-black text-slate-900 mt-1" id="audit-empty-status">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nama Kosong</p>
+        <div class="text-4xl font-black text-slate-900 mt-1" id="audit-missing-name">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Header Asing</p>
+        <div class="text-4xl font-black text-slate-900 mt-1" id="audit-unknown-header">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-rose-100">
+        <p class="text-xs font-bold text-rose-500 uppercase tracking-widest">Contoh Duplikat</p>
+        <div class="text-4xl font-black text-rose-600 mt-1" id="audit-duplicate">0</div>
+      </div>
     </section>
 
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
         <p class="font-extrabold text-slate-900 mb-4">Header Tidak Dikenali</p>
-        <div id="audit-unknown-header-list" class="text-slate-500 leading-relaxed">-</div>
+        <div id="audit-unknown-header-list" class="text-slate-500 leading-relaxed space-y-2">-</div>
       </div>
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
         <p class="font-extrabold text-slate-900 mb-4">Contoh Duplikat</p>
-        <div id="audit-duplicate-list" class="text-slate-500 leading-relaxed">-</div>
+        <div id="audit-duplicate-list" class="text-slate-500 leading-relaxed space-y-2">-</div>
       </div>
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
         <p class="font-extrabold text-slate-900 mb-4">Masalah Nomor</p>
-        <div id="audit-invalid-phone-list" class="text-slate-500 leading-relaxed">-</div>
+        <div id="audit-invalid-phone-list" class="text-slate-500 leading-relaxed space-y-2">-</div>
       </div>
     </section>
 
-    <div id="loadingState" class="px-8 py-12 text-center text-slate-500">
-      <div class="inline-flex items-center gap-3 bg-slate-50 border border-slate-200 px-5 py-3 rounded-full">
-        <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4"></circle><path d="M22 12a10 10 0 00-10-10" stroke="currentColor" stroke-width="4"></path></svg>
-        Mengambil data audit dari spreadsheet...
-      </div>
-    </div>
-
-    <div id="errorState" class="hidden px-8 py-14 text-center">
-      <div class="inline-flex flex-col items-center gap-3 max-w-xl">
-        <div class="bg-rose-50 text-rose-600 p-4 rounded-full">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <section class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+        <div>
+          <h2 class="font-extrabold text-slate-900 text-lg">Tabel Audit Data</h2>
+          <p class="text-sm text-slate-500 mt-1">Nomor akan mengikuti mode aktif: tersensor di Mode Publik, penuh di Mode Admin.</p>
         </div>
-        <h3 class="text-lg font-bold text-slate-800">Audit belum bisa dimuat</h3>
-        <p class="text-slate-500 text-sm leading-relaxed" id="errorMessage"></p>
+        <div class="text-sm font-bold text-slate-500" id="tableInfo">0 baris</div>
       </div>
-    </div>
+
+      <div id="loadingState" class="px-8 py-12 text-center text-slate-500">
+        <div class="inline-flex items-center gap-3 bg-slate-50 border border-slate-200 px-5 py-3 rounded-full">
+          <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4"></circle><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="4"></path></svg>
+          Mengambil data audit dari spreadsheet...
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar hidden" id="tableWrapper">
+        <table class="w-full text-left border-collapse min-w-[1200px]">
+          <thead>
+            <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
+              <th class="px-6 py-4">Baris</th>
+              <th class="px-6 py-4">Nama</th>
+              <th class="px-6 py-4">WhatsApp</th>
+              <th class="px-6 py-4">Sekolah</th>
+              <th class="px-6 py-4">Status Asli</th>
+              <th class="px-6 py-4">Status Normal</th>
+              <th class="px-6 py-4">Catatan</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-50"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="hidden py-16 text-center text-slate-400 font-medium italic">
+        Tidak ada data audit yang bisa ditampilkan.
+      </div>
+
+      <div id="errorState" class="hidden px-8 py-14 text-center">
+        <div class="inline-flex flex-col items-center gap-3 max-w-xl">
+          <div class="bg-rose-50 text-rose-600 p-4 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800">Audit belum bisa dimuat</h3>
+          <p class="text-slate-500 text-sm leading-relaxed" id="errorMessage"></p>
+        </div>
+      </div>
+    </section>
   </div>
 
 <script>
+const ADMIN_PASSWORD = '606';
+const SESSION_KEY = 'audit_admin_access';
+const MODE_KEY = 'audit_view_mode';
+
 const APP_CONFIG = {
   sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
   participantGid: '0',
   maxRows: 10000
+};
+
+const state = {
+  isAdminMode: false,
+  rows: [],
+  duplicateKeys: new Set()
 };
 
 const participantCsvUrls = [
@@ -84,10 +196,21 @@ const participantCsvUrls = [
 ];
 
 const el = {
+  loginScreen: document.getElementById('loginScreen'),
+  appShell: document.getElementById('appShell'),
+  loginForm: document.getElementById('loginForm'),
+  passwordInput: document.getElementById('passwordInput'),
+  loginError: document.getElementById('loginError'),
+  toggleModeButton: document.getElementById('toggleModeButton'),
+  logoutButton: document.getElementById('logoutButton'),
+  refreshButton: document.getElementById('refreshButton'),
   loadingState: document.getElementById('loadingState'),
+  tableWrapper: document.getElementById('tableWrapper'),
+  tableBody: document.getElementById('tableBody'),
+  tableInfo: document.getElementById('tableInfo'),
+  emptyState: document.getElementById('emptyState'),
   errorState: document.getElementById('errorState'),
   errorMessage: document.getElementById('errorMessage'),
-  refreshButton: document.getElementById('refreshButton'),
   auditInvalidPhone: document.getElementById('audit-invalid-phone'),
   auditEmptyStatus: document.getElementById('audit-empty-status'),
   auditMissingName: document.getElementById('audit-missing-name'),
@@ -102,6 +225,15 @@ function cleanText(value) {
   return (value ?? '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
 }
 function normalizeHeader(value) { return cleanText(value).toLowerCase(); }
+function escapeHtml(text) {
+  return (text ?? '')
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 function normalizePhone(value) {
   const digits = cleanText(value).replace(/\D/g, '');
   if (!digits) return '';
@@ -111,6 +243,18 @@ function normalizePhone(value) {
 function isPhoneLikelyValid(value) {
   const digits = normalizePhone(value);
   return digits.length >= 10 && digits.length <= 15;
+}
+function maskPhone(value) {
+  const raw = cleanText(value);
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return '-';
+  if (state.isAdminMode) return raw;
+  if (digits.length <= 4) return '*'.repeat(digits.length);
+  if (digits.length <= 7) return `${digits.slice(0, 2)}${'*'.repeat(Math.max(1, digits.length - 4))}${digits.slice(-2)}`;
+  const start = digits.slice(0, 4);
+  const end = digits.slice(-3);
+  const middle = '*'.repeat(Math.max(3, digits.length - 7));
+  return `${start}${middle}${end}`;
 }
 function pick(row, aliases, fallback = '-') {
   const keys = Object.keys(row || {});
@@ -134,14 +278,23 @@ function normalizeStatus(value) {
 function knownHeaders() {
   return new Set([
     'asal sekolah', 'sekolah', 'kelas', 'nama', 'no whatsapp aktif', 'no whatsapp', 'whatsapp', 'wa',
-    'pihak guru yang mengajak kamu daftar', 'guru', 'nama guru', 'status', 'username', 'username /', 'username/','no whatsa'
+    'pihak guru yang mengajak kamu daftar', 'guru', 'nama guru', 'status', 'username', 'username /', 'username/', 'no whatsa'
   ]);
+}
+function duplicateKey(item) {
+  return `${cleanText(item.nama).toLowerCase()}|${normalizePhone(item.kontak)}|${cleanText(item.sekolah).toLowerCase()}`;
 }
 function mapRow(row, index) {
   const nama = pick(row, ['Nama', 'nama'], '');
   const originalStatus = pick(row, ['STATUS', 'Status'], '');
   const kontak = pick(row, ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'Whatsapp', 'WA'], '-');
   const sekolah = pick(row, ['Asal Sekolah', 'Sekolah'], '-');
+
+  const notes = [];
+  if (!nama) notes.push('Nama kosong');
+  if (!cleanText(originalStatus)) notes.push('Status kosong');
+  if (!isPhoneLikelyValid(kontak)) notes.push('Nomor perlu dicek');
+
   return {
     _rowNumber: index + 2,
     nama,
@@ -149,10 +302,8 @@ function mapRow(row, index) {
     sekolah,
     originalStatus,
     status: normalizeStatus(originalStatus),
+    notes
   };
-}
-function duplicateKey(item) {
-  return `${cleanText(item.nama).toLowerCase()}|${normalizePhone(item.kontak)}|${cleanText(item.sekolah).toLowerCase()}`;
 }
 async function fetchCsvText(urls) {
   let lastError = null;
@@ -176,8 +327,30 @@ function setLoadingState(isLoading) {
 function setError(message = '') {
   el.errorState.classList.toggle('hidden', !message);
   el.errorMessage.textContent = message;
+  if (message) {
+    el.tableWrapper.classList.add('hidden');
+    el.emptyState.classList.add('hidden');
+  }
 }
-function renderAudit(rawRows, mappedData) {
+function setMode(isAdmin) {
+  state.isAdminMode = isAdmin;
+  localStorage.setItem(MODE_KEY, isAdmin ? 'admin' : 'public');
+  el.toggleModeButton.textContent = isAdmin ? 'Mode: Admin' : 'Mode: Publik';
+  el.toggleModeButton.className = isAdmin
+    ? 'px-5 py-3 rounded-2xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-all shadow-sm'
+    : 'px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all shadow-sm';
+  renderTable();
+}
+function enterApp() {
+  el.loginScreen.classList.add('hidden');
+  el.appShell.classList.remove('hidden');
+}
+function logout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(MODE_KEY);
+  window.location.reload();
+}
+function renderAuditSummary(rawRows, mappedData) {
   const headerSet = new Set();
   (rawRows || []).slice(0, 3).forEach(row => Object.keys(row || {}).forEach(key => headerSet.add(normalizeHeader(key))));
   const unknownHeaders = [...headerSet].filter(h => h && !knownHeaders().has(h));
@@ -192,7 +365,9 @@ function renderAudit(rawRows, mappedData) {
     if (!cleanText(item.originalStatus)) emptyStatusCount++;
     if (!isPhoneLikelyValid(item.kontak)) {
       invalidPhoneCount++;
-      if (invalidPhoneExamples.length < 5) invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • ${item.kontak || '-'}`);
+      if (invalidPhoneExamples.length < 5) {
+        invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • ${maskPhone(item.kontak)}`);
+      }
     }
   }
 
@@ -201,36 +376,120 @@ function renderAudit(rawRows, mappedData) {
     const key = duplicateKey(item);
     counts.set(key, (counts.get(key) || 0) + 1);
   });
-  const duplicateKeys = new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
-  const duplicateExamples = mappedData.filter(item => duplicateKeys.has(duplicateKey(item))).slice(0, 8).map(item => `${item.nama} • ${item.sekolah}`);
+  state.duplicateKeys = new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+  const duplicateExamples = mappedData.filter(item => state.duplicateKeys.has(duplicateKey(item))).slice(0, 8).map(item => `${item.nama || '(tanpa nama)'} • ${item.sekolah || '-'}`);
 
   el.auditInvalidPhone.textContent = invalidPhoneCount;
   el.auditEmptyStatus.textContent = emptyStatusCount;
   el.auditMissingName.textContent = missingNameCount;
   el.auditUnknownHeader.textContent = unknownHeaders.length;
   el.auditDuplicate.textContent = duplicateExamples.length;
-  el.auditUnknownHeaderList.innerHTML = unknownHeaders.length ? unknownHeaders.map(v => `<div>${v}</div>`).join('') : '-';
-  el.auditDuplicateList.innerHTML = duplicateExamples.length ? duplicateExamples.map(v => `<div>${v}</div>`).join('') : '-';
-  el.auditInvalidPhoneList.innerHTML = invalidPhoneExamples.length ? invalidPhoneExamples.map(v => `<div>${v}</div>`).join('') : '-';
+  el.auditUnknownHeaderList.innerHTML = unknownHeaders.length ? unknownHeaders.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
+  el.auditDuplicateList.innerHTML = duplicateExamples.length ? duplicateExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
+  el.auditInvalidPhoneList.innerHTML = invalidPhoneExamples.length ? invalidPhoneExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
+}
+function renderTable() {
+  el.tableBody.innerHTML = '';
+
+  if (!state.rows.length) {
+    el.tableWrapper.classList.add('hidden');
+    el.emptyState.classList.remove('hidden');
+    el.tableInfo.textContent = '0 baris';
+    renderAuditSummary([], []);
+    return;
+  }
+
+  const html = state.rows.map((item) => {
+    const notes = [...item.notes];
+    if (state.duplicateKeys.has(duplicateKey(item))) notes.push('Kemungkinan duplikat');
+
+    const noteHtml = notes.length
+      ? notes.map(note => `<span class="inline-flex px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 text-[11px] font-black mr-1 mb-1">${escapeHtml(note)}</span>`).join('')
+      : '<span class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-black">Aman</span>';
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition-all align-top">
+        <td class="px-6 py-5 text-sm font-bold text-slate-500">${item._rowNumber}</td>
+        <td class="px-6 py-5">
+          <div class="font-bold text-slate-800">${escapeHtml(item.nama || '-')}</div>
+        </td>
+        <td class="px-6 py-5">
+          <div class="font-medium text-slate-700">${escapeHtml(maskPhone(item.kontak))}</div>
+        </td>
+        <td class="px-6 py-5">
+          <div class="font-medium text-slate-700">${escapeHtml(item.sekolah || '-')}</div>
+        </td>
+        <td class="px-6 py-5">
+          <div class="font-medium text-slate-500">${escapeHtml(item.originalStatus || '-')}</div>
+        </td>
+        <td class="px-6 py-5">
+          <div class="font-black ${item.status === 'LOLOS' ? 'text-emerald-600' : 'text-amber-600'}">${escapeHtml(item.status)}</div>
+        </td>
+        <td class="px-6 py-5">${noteHtml}</td>
+      </tr>
+    `;
+  }).join('');
+
+  el.tableBody.innerHTML = html;
+  el.tableWrapper.classList.remove('hidden');
+  el.emptyState.classList.add('hidden');
+  el.tableInfo.textContent = `${state.rows.length} baris • ${state.isAdminMode ? 'Mode Admin' : 'Mode Publik'}`;
+
+  renderAuditSummary(state.rows, state.rows);
 }
 async function loadAudit() {
   setLoadingState(true);
   setError('');
+
   try {
     const csvText = await fetchCsvText(participantCsvUrls);
     const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: 'greedy', dynamicTyping: false });
-    const rawRows = parsed.data || [];
-    const mapped = rawRows.slice(0, APP_CONFIG.maxRows).map((row, index) => mapRow(row, index)).filter(Boolean);
-    renderAudit(rawRows, mapped);
+    state.rows = (parsed.data || []).slice(0, APP_CONFIG.maxRows).map((row, index) => mapRow(row, index)).filter(Boolean);
+    renderTable();
   } catch (error) {
     console.error(error);
+    state.rows = [];
     setError(`Gagal memuat audit. Detail: ${error.message}`);
   } finally {
     setLoadingState(false);
   }
 }
-el.refreshButton.addEventListener('click', loadAudit);
-loadAudit();
+function initAuth() {
+  const hasAccess = sessionStorage.getItem(SESSION_KEY) === 'true';
+
+  if (hasAccess) {
+    enterApp();
+    const savedMode = localStorage.getItem(MODE_KEY);
+    setMode(savedMode === 'admin');
+    loadAudit();
+    return;
+  }
+
+  el.loginForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const password = el.passwordInput.value;
+
+    if (password === ADMIN_PASSWORD) {
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      el.loginError.classList.add('hidden');
+      enterApp();
+      setMode(false);
+      loadAudit();
+      return;
+    }
+
+    el.loginError.classList.remove('hidden');
+    el.passwordInput.focus();
+    el.passwordInput.select();
+  });
+}
+function attachEvents() {
+  el.toggleModeButton.addEventListener('click', () => setMode(!state.isAdminMode));
+  el.logoutButton.addEventListener('click', logout);
+  el.refreshButton.addEventListener('click', loadAudit);
+}
+attachEvents();
+initAuth();
 </script>
 </body>
 </html>
