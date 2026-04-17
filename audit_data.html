@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Audit Data</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
+  <div class="max-w-7xl mx-auto px-4 pt-8 md:pt-12">
+    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm mb-4 text-xs font-bold tracking-[0.2em] uppercase text-rose-600">
+          <span class="w-2 h-2 bg-rose-500 rounded-full"></span>
+          Panel Audit Data
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          AUDIT DATA SPREADSHEET
+        </h1>
+        <p class="text-slate-500 mt-4 max-w-2xl">Halaman ini dipisah dari landing utama agar tampilan publik tetap bersih. Audit membaca data mentah spreadsheet untuk mendeteksi nomor bermasalah, status kosong, header asing, dan contoh duplikat.</p>
+      </div>
+      <div class="flex gap-3">
+        <a href="./index.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">Kembali ke Landing</a>
+        <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">Muat Ulang Audit</button>
+      </div>
+    </header>
+
+    <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nomor Tidak Valid</p><div class="text-4xl font-black text-slate-900 mt-1" id="audit-invalid-phone">0</div></div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Status Kosong</p><div class="text-4xl font-black text-slate-900 mt-1" id="audit-empty-status">0</div></div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nama Kosong</p><div class="text-4xl font-black text-slate-900 mt-1" id="audit-missing-name">0</div></div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Header Asing</p><div class="text-4xl font-black text-slate-900 mt-1" id="audit-unknown-header">0</div></div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-rose-100"><p class="text-xs font-bold text-rose-500 uppercase tracking-widest">Contoh Duplikat</p><div class="text-4xl font-black text-rose-600 mt-1" id="audit-duplicate">0</div></div>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
+        <p class="font-extrabold text-slate-900 mb-4">Header Tidak Dikenali</p>
+        <div id="audit-unknown-header-list" class="text-slate-500 leading-relaxed">-</div>
+      </div>
+      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
+        <p class="font-extrabold text-slate-900 mb-4">Contoh Duplikat</p>
+        <div id="audit-duplicate-list" class="text-slate-500 leading-relaxed">-</div>
+      </div>
+      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
+        <p class="font-extrabold text-slate-900 mb-4">Masalah Nomor</p>
+        <div id="audit-invalid-phone-list" class="text-slate-500 leading-relaxed">-</div>
+      </div>
+    </section>
+
+    <div id="loadingState" class="px-8 py-12 text-center text-slate-500">
+      <div class="inline-flex items-center gap-3 bg-slate-50 border border-slate-200 px-5 py-3 rounded-full">
+        <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4"></circle><path d="M22 12a10 10 0 00-10-10" stroke="currentColor" stroke-width="4"></path></svg>
+        Mengambil data audit dari spreadsheet...
+      </div>
+    </div>
+
+    <div id="errorState" class="hidden px-8 py-14 text-center">
+      <div class="inline-flex flex-col items-center gap-3 max-w-xl">
+        <div class="bg-rose-50 text-rose-600 p-4 rounded-full">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">Audit belum bisa dimuat</h3>
+        <p class="text-slate-500 text-sm leading-relaxed" id="errorMessage"></p>
+      </div>
+    </div>
+  </div>
+
+<script>
+const APP_CONFIG = {
+  sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
+  participantGid: '0',
+  maxRows: 10000
+};
+
+const participantCsvUrls = [
+  `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/export?format=csv&gid=${APP_CONFIG.participantGid}`,
+  `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/gviz/tq?tqx=out:csv&gid=${APP_CONFIG.participantGid}`
+];
+
+const el = {
+  loadingState: document.getElementById('loadingState'),
+  errorState: document.getElementById('errorState'),
+  errorMessage: document.getElementById('errorMessage'),
+  refreshButton: document.getElementById('refreshButton'),
+  auditInvalidPhone: document.getElementById('audit-invalid-phone'),
+  auditEmptyStatus: document.getElementById('audit-empty-status'),
+  auditMissingName: document.getElementById('audit-missing-name'),
+  auditUnknownHeader: document.getElementById('audit-unknown-header'),
+  auditDuplicate: document.getElementById('audit-duplicate'),
+  auditUnknownHeaderList: document.getElementById('audit-unknown-header-list'),
+  auditDuplicateList: document.getElementById('audit-duplicate-list'),
+  auditInvalidPhoneList: document.getElementById('audit-invalid-phone-list')
+};
+
+function cleanText(value) {
+  return (value ?? '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
+}
+function normalizeHeader(value) { return cleanText(value).toLowerCase(); }
+function normalizePhone(value) {
+  const digits = cleanText(value).replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('62')) return '0' + digits.slice(2);
+  return digits;
+}
+function isPhoneLikelyValid(value) {
+  const digits = normalizePhone(value);
+  return digits.length >= 10 && digits.length <= 15;
+}
+function pick(row, aliases, fallback = '-') {
+  const keys = Object.keys(row || {});
+  for (const alias of aliases) {
+    const matchedKey = keys.find((key) => normalizeHeader(key) === normalizeHeader(alias));
+    if (matchedKey) {
+      const value = cleanText(row[matchedKey]);
+      if (value) return value;
+    }
+  }
+  return fallback;
+}
+function normalizeStatus(value) {
+  const status = cleanText(value).toUpperCase();
+  if (!status) return 'TIDAK LOLOS';
+  if (status.includes('TIDAK')) return 'TIDAK LOLOS';
+  if (status === 'TID') return 'TIDAK LOLOS';
+  if (status.includes('LOLOS')) return 'LOLOS';
+  return 'TIDAK LOLOS';
+}
+function knownHeaders() {
+  return new Set([
+    'asal sekolah', 'sekolah', 'kelas', 'nama', 'no whatsapp aktif', 'no whatsapp', 'whatsapp', 'wa',
+    'pihak guru yang mengajak kamu daftar', 'guru', 'nama guru', 'status', 'username', 'username /', 'username/','no whatsa'
+  ]);
+}
+function mapRow(row, index) {
+  const nama = pick(row, ['Nama', 'nama'], '');
+  const originalStatus = pick(row, ['STATUS', 'Status'], '');
+  const kontak = pick(row, ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'Whatsapp', 'WA'], '-');
+  const sekolah = pick(row, ['Asal Sekolah', 'Sekolah'], '-');
+  return {
+    _rowNumber: index + 2,
+    nama,
+    kontak,
+    sekolah,
+    originalStatus,
+    status: normalizeStatus(originalStatus),
+  };
+}
+function duplicateKey(item) {
+  return `${cleanText(item.nama).toLowerCase()}|${normalizePhone(item.kontak)}|${cleanText(item.sekolah).toLowerCase()}`;
+}
+async function fetchCsvText(urls) {
+  let lastError = null;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      if (!text || text.trim().startsWith('<!DOCTYPE html')) throw new Error('Respon bukan CSV');
+      return text;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error('CSV Google Sheets tidak bisa diambil');
+}
+function setLoadingState(isLoading) {
+  el.loadingState.classList.toggle('hidden', !isLoading);
+  el.refreshButton.disabled = isLoading;
+}
+function setError(message = '') {
+  el.errorState.classList.toggle('hidden', !message);
+  el.errorMessage.textContent = message;
+}
+function renderAudit(rawRows, mappedData) {
+  const headerSet = new Set();
+  (rawRows || []).slice(0, 3).forEach(row => Object.keys(row || {}).forEach(key => headerSet.add(normalizeHeader(key))));
+  const unknownHeaders = [...headerSet].filter(h => h && !knownHeaders().has(h));
+
+  let invalidPhoneCount = 0;
+  let emptyStatusCount = 0;
+  let missingNameCount = 0;
+  const invalidPhoneExamples = [];
+
+  for (const item of mappedData) {
+    if (!item.nama) missingNameCount++;
+    if (!cleanText(item.originalStatus)) emptyStatusCount++;
+    if (!isPhoneLikelyValid(item.kontak)) {
+      invalidPhoneCount++;
+      if (invalidPhoneExamples.length < 5) invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • ${item.kontak || '-'}`);
+    }
+  }
+
+  const counts = new Map();
+  mappedData.filter(item => item.nama).forEach(item => {
+    const key = duplicateKey(item);
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+  const duplicateKeys = new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+  const duplicateExamples = mappedData.filter(item => duplicateKeys.has(duplicateKey(item))).slice(0, 8).map(item => `${item.nama} • ${item.sekolah}`);
+
+  el.auditInvalidPhone.textContent = invalidPhoneCount;
+  el.auditEmptyStatus.textContent = emptyStatusCount;
+  el.auditMissingName.textContent = missingNameCount;
+  el.auditUnknownHeader.textContent = unknownHeaders.length;
+  el.auditDuplicate.textContent = duplicateExamples.length;
+  el.auditUnknownHeaderList.innerHTML = unknownHeaders.length ? unknownHeaders.map(v => `<div>${v}</div>`).join('') : '-';
+  el.auditDuplicateList.innerHTML = duplicateExamples.length ? duplicateExamples.map(v => `<div>${v}</div>`).join('') : '-';
+  el.auditInvalidPhoneList.innerHTML = invalidPhoneExamples.length ? invalidPhoneExamples.map(v => `<div>${v}</div>`).join('') : '-';
+}
+async function loadAudit() {
+  setLoadingState(true);
+  setError('');
+  try {
+    const csvText = await fetchCsvText(participantCsvUrls);
+    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: 'greedy', dynamicTyping: false });
+    const rawRows = parsed.data || [];
+    const mapped = rawRows.slice(0, APP_CONFIG.maxRows).map((row, index) => mapRow(row, index)).filter(Boolean);
+    renderAudit(rawRows, mapped);
+  } catch (error) {
+    console.error(error);
+    setError(`Gagal memuat audit. Detail: ${error.message}`);
+  } finally {
+    setLoadingState(false);
+  }
+}
+el.refreshButton.addEventListener('click', loadAudit);
+loadAudit();
+</script>
+</body>
+</html>
