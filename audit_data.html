@@ -50,7 +50,7 @@
       </p>
 
       <div class="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-4 text-sm text-slate-500">
-        Default setelah masuk adalah <strong>Mode Publik</strong> agar nomor tetap tersensor. Aktifkan <strong>Mode Admin</strong> bila ingin melihat nomor penuh.
+        Default setelah masuk adalah <strong>Mode Publik</strong>. Aktifkan <strong>Mode Admin</strong> agar nomor peserta dan nomor guru tampil penuh.
       </div>
     </div>
   </div>
@@ -66,7 +66,7 @@
           AUDIT DATA SPREADSHEET
         </h1>
         <p class="text-slate-500 mt-4 max-w-3xl">
-          Halaman ini dipisah dari landing utama. Gunakan <strong>Mode Publik</strong> untuk tampilan aman dengan nomor tersensor, atau aktifkan <strong>Mode Admin</strong> untuk melihat nomor penuh.
+          Halaman ini dipisah dari landing utama. Gunakan <strong>Mode Publik</strong> untuk tampilan aman dengan nomor tersensor, atau aktifkan <strong>Mode Admin</strong> untuk melihat nomor peserta dan nomor guru penuh.
         </p>
       </div>
 
@@ -125,12 +125,24 @@
     </section>
 
     <section class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-      <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-        <div>
-          <h2 class="font-extrabold text-slate-900 text-lg">Tabel Audit Data</h2>
-          <p class="text-sm text-slate-500 mt-1">Nomor akan mengikuti mode aktif: tersensor di Mode Publik, penuh di Mode Admin.</p>
+      <div class="p-6 border-b border-slate-100 flex flex-col gap-4">
+        <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+          <div>
+            <h2 class="font-extrabold text-slate-900 text-lg">Tabel Audit Data</h2>
+            <p class="text-sm text-slate-500 mt-1">Nomor peserta dan nomor guru akan mengikuti mode aktif.</p>
+          </div>
+          <div class="text-sm font-bold text-slate-500" id="tableInfo">0 baris</div>
         </div>
-        <div class="text-sm font-bold text-slate-500" id="tableInfo">0 baris</div>
+
+        <div class="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3">
+          <div class="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="searchInput" type="text" placeholder="Cari nama, sekolah, status, guru, nomor peserta, atau nomor guru..." class="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
+          </div>
+          <button id="clearSearchButton" class="px-5 py-4 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
+            Reset Pencarian
+          </button>
+        </div>
       </div>
 
       <div id="loadingState" class="px-8 py-12 text-center text-slate-500">
@@ -141,13 +153,16 @@
       </div>
 
       <div class="overflow-x-auto custom-scrollbar hidden" id="tableWrapper">
-        <table class="w-full text-left border-collapse min-w-[1200px]">
+        <table class="w-full text-left border-collapse min-w-[1600px]">
           <thead>
             <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
               <th class="px-6 py-4">Baris</th>
               <th class="px-6 py-4">Nama</th>
-              <th class="px-6 py-4">WhatsApp</th>
+              <th class="px-6 py-4">WhatsApp Peserta</th>
               <th class="px-6 py-4">Sekolah</th>
+              <th class="px-6 py-4">Kelas</th>
+              <th class="px-6 py-4">Guru</th>
+              <th class="px-6 py-4">Nomor Guru</th>
               <th class="px-6 py-4">Status Asli</th>
               <th class="px-6 py-4">Status Normal</th>
               <th class="px-6 py-4">Catatan</th>
@@ -158,7 +173,7 @@
       </div>
 
       <div id="emptyState" class="hidden py-16 text-center text-slate-400 font-medium italic">
-        Tidak ada data audit yang bisa ditampilkan.
+        Tidak ada data audit yang cocok dengan pencarian.
       </div>
 
       <div id="errorState" class="hidden px-8 py-14 text-center">
@@ -181,13 +196,16 @@ const MODE_KEY = 'audit_view_mode';
 const APP_CONFIG = {
   sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
   participantGid: '0',
-  maxRows: 10000
+  maxRows: 10000,
+  searchDebounceMs: 150
 };
 
 const state = {
   isAdminMode: false,
   rows: [],
-  duplicateKeys: new Set()
+  filteredRows: [],
+  duplicateKeys: new Set(),
+  searchTimer: null
 };
 
 const participantCsvUrls = [
@@ -204,6 +222,8 @@ const el = {
   toggleModeButton: document.getElementById('toggleModeButton'),
   logoutButton: document.getElementById('logoutButton'),
   refreshButton: document.getElementById('refreshButton'),
+  searchInput: document.getElementById('searchInput'),
+  clearSearchButton: document.getElementById('clearSearchButton'),
   loadingState: document.getElementById('loadingState'),
   tableWrapper: document.getElementById('tableWrapper'),
   tableBody: document.getElementById('tableBody'),
@@ -256,6 +276,29 @@ function maskPhone(value) {
   const middle = '*'.repeat(Math.max(3, digits.length - 7));
   return `${start}${middle}${end}`;
 }
+function extractPhoneFromText(value) {
+  const raw = cleanText(value);
+  const match = raw.match(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/);
+  return match ? cleanText(match[0]) : '';
+}
+function stripPhoneFromText(value) {
+  const raw = cleanText(value);
+  if (!raw) return '-';
+  const stripped = raw
+    .replace(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/g, '')
+    .replace(/[\s\-–—,;:()]+$/g, '')
+    .replace(/^[\s\-–—,;:()]+/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return stripped || raw;
+}
+function highlightText(text, query) {
+  const source = String(text ?? '');
+  const q = cleanText(query);
+  if (!q) return escapeHtml(source);
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escapeHtml(source).replace(new RegExp(escaped, 'ig'), (m) => `<mark class="bg-amber-100 text-inherit px-0.5 rounded">${m}</mark>`);
+}
 function pick(row, aliases, fallback = '-') {
   const keys = Object.keys(row || {});
   for (const alias of aliases) {
@@ -284,26 +327,48 @@ function knownHeaders() {
 function duplicateKey(item) {
   return `${cleanText(item.nama).toLowerCase()}|${normalizePhone(item.kontak)}|${cleanText(item.sekolah).toLowerCase()}`;
 }
+function buildSearchIndex(item) {
+  return [
+    item.nama,
+    item.kontak,
+    item.sekolah,
+    item.kelas,
+    item.guru,
+    item.guruPhone,
+    item.originalStatus,
+    item.status
+  ].join(' ').toLowerCase();
+}
 function mapRow(row, index) {
   const nama = pick(row, ['Nama', 'nama'], '');
   const originalStatus = pick(row, ['STATUS', 'Status'], '');
   const kontak = pick(row, ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'Whatsapp', 'WA'], '-');
   const sekolah = pick(row, ['Asal Sekolah', 'Sekolah'], '-');
+  const kelas = pick(row, ['Kelas'], '-');
+  const guruRaw = pick(row, ['Pihak Guru yang Mengajak Kamu Daftar', 'Guru', 'Nama Guru'], '-');
+  const guruPhone = extractPhoneFromText(guruRaw);
+  const guru = stripPhoneFromText(guruRaw);
 
   const notes = [];
   if (!nama) notes.push('Nama kosong');
   if (!cleanText(originalStatus)) notes.push('Status kosong');
-  if (!isPhoneLikelyValid(kontak)) notes.push('Nomor perlu dicek');
+  if (!isPhoneLikelyValid(kontak)) notes.push('Nomor peserta perlu dicek');
+  if (guruPhone && !isPhoneLikelyValid(guruPhone)) notes.push('Nomor guru perlu dicek');
 
-  return {
+  const mapped = {
     _rowNumber: index + 2,
     nama,
     kontak,
     sekolah,
+    kelas,
+    guru,
+    guruPhone,
     originalStatus,
     status: normalizeStatus(originalStatus),
     notes
   };
+  mapped.searchIndex = buildSearchIndex(mapped);
+  return mapped;
 }
 async function fetchCsvText(urls) {
   let lastError = null;
@@ -365,9 +430,11 @@ function renderAuditSummary(rawRows, mappedData) {
     if (!cleanText(item.originalStatus)) emptyStatusCount++;
     if (!isPhoneLikelyValid(item.kontak)) {
       invalidPhoneCount++;
-      if (invalidPhoneExamples.length < 5) {
-        invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • ${maskPhone(item.kontak)}`);
-      }
+      if (invalidPhoneExamples.length < 5) invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • Peserta: ${maskPhone(item.kontak)}`);
+    }
+    if (item.guruPhone && !isPhoneLikelyValid(item.guruPhone)) {
+      invalidPhoneCount++;
+      if (invalidPhoneExamples.length < 5) invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • Guru: ${maskPhone(item.guruPhone)}`);
     }
   }
 
@@ -388,18 +455,25 @@ function renderAuditSummary(rawRows, mappedData) {
   el.auditDuplicateList.innerHTML = duplicateExamples.length ? duplicateExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
   el.auditInvalidPhoneList.innerHTML = invalidPhoneExamples.length ? invalidPhoneExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
 }
+function getFilteredRows() {
+  const query = cleanText(el.searchInput.value).toLowerCase();
+  if (!query) return state.rows;
+  return state.rows.filter(item => item.searchIndex.includes(query));
+}
 function renderTable() {
+  state.filteredRows = getFilteredRows();
   el.tableBody.innerHTML = '';
 
-  if (!state.rows.length) {
+  if (!state.filteredRows.length) {
     el.tableWrapper.classList.add('hidden');
     el.emptyState.classList.remove('hidden');
-    el.tableInfo.textContent = '0 baris';
-    renderAuditSummary([], []);
+    el.tableInfo.textContent = `0 baris • ${state.isAdminMode ? 'Mode Admin' : 'Mode Publik'}`;
+    renderAuditSummary(state.rows, state.rows);
     return;
   }
 
-  const html = state.rows.map((item) => {
+  const query = el.searchInput.value;
+  const html = state.filteredRows.map((item) => {
     const notes = [...item.notes];
     if (state.duplicateKeys.has(duplicateKey(item))) notes.push('Kemungkinan duplikat');
 
@@ -411,19 +485,28 @@ function renderTable() {
       <tr class="hover:bg-slate-50/80 transition-all align-top">
         <td class="px-6 py-5 text-sm font-bold text-slate-500">${item._rowNumber}</td>
         <td class="px-6 py-5">
-          <div class="font-bold text-slate-800">${escapeHtml(item.nama || '-')}</div>
+          <div class="font-bold text-slate-800">${highlightText(item.nama || '-', query)}</div>
         </td>
         <td class="px-6 py-5">
-          <div class="font-medium text-slate-700">${escapeHtml(maskPhone(item.kontak))}</div>
+          <div class="font-medium text-slate-700">${highlightText(maskPhone(item.kontak), query)}</div>
         </td>
         <td class="px-6 py-5">
-          <div class="font-medium text-slate-700">${escapeHtml(item.sekolah || '-')}</div>
+          <div class="font-medium text-slate-700">${highlightText(item.sekolah || '-', query)}</div>
         </td>
         <td class="px-6 py-5">
-          <div class="font-medium text-slate-500">${escapeHtml(item.originalStatus || '-')}</div>
+          <div class="font-medium text-slate-500">${highlightText(item.kelas || '-', query)}</div>
         </td>
         <td class="px-6 py-5">
-          <div class="font-black ${item.status === 'LOLOS' ? 'text-emerald-600' : 'text-amber-600'}">${escapeHtml(item.status)}</div>
+          <div class="font-medium text-slate-700">${highlightText(item.guru || '-', query)}</div>
+        </td>
+        <td class="px-6 py-5">
+          <div class="font-medium text-slate-700">${highlightText(maskPhone(item.guruPhone || '-'), query)}</div>
+        </td>
+        <td class="px-6 py-5">
+          <div class="font-medium text-slate-500">${highlightText(item.originalStatus || '-', query)}</div>
+        </td>
+        <td class="px-6 py-5">
+          <div class="font-black ${item.status === 'LOLOS' ? 'text-emerald-600' : 'text-amber-600'}">${highlightText(item.status, query)}</div>
         </td>
         <td class="px-6 py-5">${noteHtml}</td>
       </tr>
@@ -433,9 +516,13 @@ function renderTable() {
   el.tableBody.innerHTML = html;
   el.tableWrapper.classList.remove('hidden');
   el.emptyState.classList.add('hidden');
-  el.tableInfo.textContent = `${state.rows.length} baris • ${state.isAdminMode ? 'Mode Admin' : 'Mode Publik'}`;
+  el.tableInfo.textContent = `${state.filteredRows.length} dari ${state.rows.length} baris • ${state.isAdminMode ? 'Mode Admin' : 'Mode Publik'}`;
 
   renderAuditSummary(state.rows, state.rows);
+}
+function scheduleSearchRender() {
+  clearTimeout(state.searchTimer);
+  state.searchTimer = setTimeout(renderTable, APP_CONFIG.searchDebounceMs);
 }
 async function loadAudit() {
   setLoadingState(true);
@@ -449,6 +536,7 @@ async function loadAudit() {
   } catch (error) {
     console.error(error);
     state.rows = [];
+    state.filteredRows = [];
     setError(`Gagal memuat audit. Detail: ${error.message}`);
   } finally {
     setLoadingState(false);
@@ -487,6 +575,12 @@ function attachEvents() {
   el.toggleModeButton.addEventListener('click', () => setMode(!state.isAdminMode));
   el.logoutButton.addEventListener('click', logout);
   el.refreshButton.addEventListener('click', loadAudit);
+  el.searchInput.addEventListener('input', scheduleSearchRender);
+  el.clearSearchButton.addEventListener('click', () => {
+    el.searchInput.value = '';
+    renderTable();
+    el.searchInput.focus();
+  });
 }
 attachEvents();
 initAuth();
