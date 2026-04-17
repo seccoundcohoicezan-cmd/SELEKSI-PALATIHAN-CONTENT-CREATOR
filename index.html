@@ -146,31 +146,6 @@
           </p>
         </form>
 
-        <section
-          id="adminTools"
-          class="hidden md:block mt-2 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-3 sm:p-4"
-          aria-labelledby="adminToolsTitle"
-        >
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 id="adminToolsTitle" class="text-sm font-extrabold uppercase tracking-[0.14em] text-slate-500">Alat Tambahan</h3>
-              <p class="text-sm text-slate-500 mt-1">Gunakan hanya bila perlu untuk pengelolaan data.</p>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-              <button id="refreshButton" type="button" class="px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all shadow-sm">
-                Muat Ulang Data
-              </button>
-              <button id="exportPdfButton" type="button" class="px-4 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-all shadow-sm">
-                Unduh PDF
-              </button>
-              <a id="auditButton" href="./audit_data.html" class="px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all shadow-sm text-center">
-                Audit Data
-              </a>
-            </div>
-          </div>
-        </section>
-
         <div id="loadingState" class="hidden mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-sm sm:text-base text-slate-500" aria-live="polite">
           Memuat data dari spreadsheet...
         </div>
@@ -188,6 +163,31 @@
             <p id="selfCheckResultSchool" class="mt-2 text-sm md:text-base text-slate-500"></p>
             <div id="selfCheckResultStatus" class="mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black"></div>
             <p id="selfCheckResultNote" class="mt-4 text-sm md:text-base text-slate-600 max-w-2xl mx-auto"></p>
+          </div>
+        </section>
+
+        <section
+          id="adminTools"
+          class="hidden md:block mt-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-3 sm:p-4"
+          aria-labelledby="adminToolsTitle"
+        >
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 id="adminToolsTitle" class="text-sm font-extrabold uppercase tracking-[0.14em] text-slate-500">Alat Tambahan</h3>
+              <p class="text-sm text-slate-500 mt-1">Gunakan hanya bila perlu untuk pengelolaan data.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+              <button id="refreshButton" type="button" class="px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                Muat Ulang Data
+              </button>
+              <button id="exportPdfButton" type="button" class="px-4 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                Unduh PDF
+              </button>
+              <a id="auditButton" href="./audit_data.html" class="px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all shadow-sm text-center">
+                Audit Data
+              </a>
+            </div>
           </div>
         </section>
       </div>
@@ -213,7 +213,10 @@
       lastLoadedAt: null,
       cacheSource: 'jaringan',
       isChecking: false,
-      mobileToolsOpen: false
+      isLoadingData: false,
+      mobileToolsOpen: false,
+      headerMap: new Map(),
+      loadError: ''
     };
 
     const el = {
@@ -245,6 +248,18 @@
       `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/export?format=csv&gid=${APP_CONFIG.participantGid}`,
       `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/gviz/tq?tqx=out:csv&gid=${APP_CONFIG.participantGid}`
     ];
+
+    const COLUMN_ALIASES = {
+      nama: ['Nama', 'nama', 'Nama Lengkap', 'Nama Peserta'],
+      kontak: ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'No WhatsApp', 'Nomor WhatsApp', 'Nomor WA', 'Whatsapp', 'WA'],
+      sekolah: ['Asal Sekolah', 'Sekolah', 'Nama Sekolah'],
+      kelas: ['Kelas', 'KELAS'],
+      guru: ['Pihak Guru yang Mengajak Kamu Daftar', 'Guru', 'Nama Guru'],
+      status: ['STATUS', 'Status', 'Hasil', 'Keterangan', 'Kelulusan']
+    };
+
+    const POSITIVE_STATUS_KEYWORDS = ['LOLOS', 'LULUS', 'DITERIMA'];
+    const NEGATIVE_STATUS_KEYWORDS = ['TIDAK', 'GAGAL', 'BELUM', 'TID'];
 
     function cleanText(value) {
       return (value ?? '')
@@ -282,11 +297,25 @@
         .replace(/'/g, '&#039;');
     }
 
-    function pick(row, aliases, fallback = '-') {
-      const keys = Object.keys(row || {});
+    function buildHeaderMap(sampleRow) {
+      const map = new Map();
+      for (const key of Object.keys(sampleRow || {})) {
+        const normalized = normalizeHeader(key);
+        if (!normalized || map.has(normalized)) continue;
+        map.set(normalized, key);
+      }
+      return map;
+    }
+
+    function pick(row, aliases, fallback = '-', headerMap = state.headerMap) {
+      const rowKeys = Object.keys(row || {});
+      const activeHeaderMap = headerMap instanceof Map && headerMap.size
+        ? headerMap
+        : buildHeaderMap(row);
+
       for (const alias of aliases) {
-        const matchedKey = keys.find((key) => normalizeHeader(key) === normalizeHeader(alias));
-        if (matchedKey) {
+        const matchedKey = activeHeaderMap.get(normalizeHeader(alias));
+        if (matchedKey && rowKeys.includes(matchedKey)) {
           const value = cleanText(row[matchedKey]);
           if (value) return value;
         }
@@ -297,33 +326,76 @@
     function normalizeStatus(value) {
       const status = cleanText(value).toUpperCase();
       if (!status) return 'TIDAK LOLOS';
-      if (status.includes('TIDAK')) return 'TIDAK LOLOS';
-      if (status === 'TID') return 'TIDAK LOLOS';
-      if (status.includes('LOLOS')) return 'LOLOS';
-      return 'TIDAK LOLOS';
+      if (NEGATIVE_STATUS_KEYWORDS.some(keyword => status.includes(keyword))) return 'TIDAK LOLOS';
+      if (POSITIVE_STATUS_KEYWORDS.some(keyword => status.includes(keyword))) return 'LOLOS';
+      return status;
     }
 
-    function mapRow(row) {
-      const nama = pick(row, ['Nama', 'nama'], '');
+    function calculateRowScore(item) {
+      let score = 0;
+      if (cleanText(item.nama)) score += 4;
+      if (normalizePhone(item.kontak)) score += 3;
+      if (cleanText(item.sekolah) && item.sekolah !== '-') score += 2;
+      if (cleanText(item.kelas) && item.kelas !== '-') score += 1;
+      if (item.status === 'LOLOS') score += 2;
+      if (item.status === 'TIDAK LOLOS') score += 1;
+      return score;
+    }
+
+    function getRowKey(item) {
+      const normalizedName = cleanText(item.nama).toLowerCase();
+      const normalizedPhone = normalizePhone(item.kontak);
+      if (normalizedPhone) return `phone:${normalizedPhone}`;
+      return `name:${normalizedName}|school:${cleanText(item.sekolah).toLowerCase()}`;
+    }
+
+    function mapRow(row, index) {
+      const nama = pick(row, COLUMN_ALIASES.nama, '', state.headerMap);
       if (!nama) return null;
 
-      return {
+      const rawStatus = pick(row, COLUMN_ALIASES.status, '', state.headerMap);
+      const mapped = {
         nama,
-        kontak: pick(row, ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'Whatsapp', 'WA']),
-        sekolah: pick(row, ['Asal Sekolah', 'Sekolah']),
-        kelas: pick(row, ['Kelas']),
-        guru: pick(row, ['Pihak Guru yang Mengajak Kamu Daftar', 'Guru', 'Nama Guru']),
-        status: normalizeStatus(pick(row, ['STATUS', 'Status'], 'TIDAK LOLOS'))
+        kontak: pick(row, COLUMN_ALIASES.kontak, '', state.headerMap),
+        sekolah: pick(row, COLUMN_ALIASES.sekolah, '-', state.headerMap),
+        kelas: pick(row, COLUMN_ALIASES.kelas, '-', state.headerMap),
+        guru: pick(row, COLUMN_ALIASES.guru, '-', state.headerMap),
+        status: normalizeStatus(rawStatus || 'TIDAK LOLOS'),
+        rawStatus: cleanText(rawStatus),
+        rowIndex: index
       };
+
+      return mapped;
     }
 
     function dedupeRows(data) {
       const map = new Map();
       for (const item of data) {
-        const key = `${cleanText(item.nama).toLowerCase()}|${normalizePhone(item.kontak)}|${cleanText(item.sekolah).toLowerCase()}`;
-        map.set(key, item);
+        const key = getRowKey(item);
+        const existing = map.get(key);
+        if (!existing) {
+          map.set(key, item);
+          continue;
+        }
+
+        const existingScore = calculateRowScore(existing);
+        const incomingScore = calculateRowScore(item);
+        if (incomingScore >= existingScore) {
+          map.set(key, item);
+        }
       }
-      return Array.from(map.values());
+      return Array.from(map.values()).sort((a, b) => a.rowIndex - b.rowIndex);
+    }
+
+    function validateParticipantHeaders(sampleRow) {
+      const headerMap = buildHeaderMap(sampleRow);
+      const missing = [];
+      for (const [field, aliases] of Object.entries(COLUMN_ALIASES)) {
+        if (field === 'guru') continue;
+        const exists = aliases.some(alias => headerMap.has(normalizeHeader(alias)));
+        if (!exists) missing.push(field);
+      }
+      return { headerMap, missing };
     }
 
     async function fetchCsvText(urls) {
@@ -343,15 +415,20 @@
     }
 
     function setLoadingState(isLoading) {
+      state.isLoadingData = isLoading;
       el.loadingState.classList.toggle('hidden', !isLoading);
       el.refreshButton.disabled = isLoading;
+      el.exportPdfButton.disabled = isLoading;
+      el.selfCheckButton.disabled = isLoading || state.isChecking;
       el.refreshButton.classList.toggle('opacity-60', isLoading);
       el.refreshButton.classList.toggle('cursor-not-allowed', isLoading);
+      el.exportPdfButton.classList.toggle('opacity-60', isLoading);
+      el.exportPdfButton.classList.toggle('cursor-not-allowed', isLoading);
     }
 
     function setCheckingState(isChecking) {
       state.isChecking = isChecking;
-      el.selfCheckButton.disabled = isChecking;
+      el.selfCheckButton.disabled = isChecking || state.isLoadingData;
       el.selfCheckButton.textContent = isChecking ? 'Mengecek...' : 'Cek Hasil Sekarang';
     }
 
@@ -422,13 +499,23 @@
       }
 
       el.lastUpdatedText.textContent = `Terakhir dimuat: ${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.participants.length} peserta`;
-      el.cacheText.textContent = `Sumber data: ${state.cacheSource} (${state.lastLoadedAt.toLocaleString('id-ID')})`;
+      el.cacheText.textContent = `Sumber data aktif: ${state.cacheSource} (${state.lastLoadedAt.toLocaleString('id-ID')})`;
+    }
+
+    function scrollResultIntoView() {
+      requestAnimationFrame(() => {
+        const target = !el.selfCheckResult.classList.contains('hidden')
+          ? el.selfCheckResult
+          : el.selfCheckEmpty;
+        target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
     }
 
     function showMessage(text) {
       el.selfCheckResult.classList.add('hidden');
       el.selfCheckEmptyText.textContent = text;
       el.selfCheckEmpty.classList.remove('hidden');
+      scrollResultIntoView();
     }
 
     function showResult(match) {
@@ -452,6 +539,7 @@
       }
 
       el.selfCheckResult.classList.remove('hidden');
+      scrollResultIntoView();
     }
 
     async function runSelfCheck() {
@@ -461,8 +549,23 @@
       el.selfCheckEmpty.classList.add('hidden');
       el.selfCheckResult.classList.add('hidden');
 
+      if (state.isLoadingData) {
+        showMessage('Data masih dimuat. Tunggu sebentar lalu coba lagi.');
+        return;
+      }
+
       if (!nameQuery && !phoneQuery) {
         showMessage('Masukkan nama peserta atau nomor WhatsApp terlebih dahulu.');
+        return;
+      }
+
+      if (el.selfCheckPhone.value && !phoneQuery) {
+        showMessage('Nomor WhatsApp belum valid. Gunakan angka saja, misalnya 08123456789.');
+        return;
+      }
+
+      if (phoneQuery && phoneQuery.length < 8) {
+        showMessage('Gunakan nomor WhatsApp yang lebih lengkap agar data bisa dicocokkan dengan tepat.');
         return;
       }
 
@@ -477,6 +580,13 @@
 
         if (!match && nameQuery) {
           match = state.participants.find(item => cleanText(item.nama).toLowerCase() === nameQuery);
+        }
+
+        if (!match && nameQuery) {
+          const looseMatches = state.participants.filter(item => cleanText(item.nama).toLowerCase().includes(nameQuery));
+          if (looseMatches.length === 1) {
+            match = looseMatches[0];
+          }
         }
 
         if (!match) {
@@ -553,6 +663,11 @@
     }
 
     function exportPdf() {
+      if (state.isLoadingData) {
+        alert('Tunggu sampai data selesai dimuat, lalu coba unduh PDF lagi.');
+        return;
+      }
+
       if (!state.participants.length) {
         alert('Data belum dimuat.');
         return;
@@ -584,6 +699,7 @@
 
     async function loadSpreadsheetData(forceRefresh = false) {
       setLoadingState(true);
+      state.loadError = '';
 
       try {
         if (!forceRefresh) {
@@ -603,9 +719,17 @@
           dynamicTyping: false
         });
 
+        const firstRow = parsed.data?.find(row => Object.values(row || {}).some(value => cleanText(value)));
+        const { headerMap, missing } = validateParticipantHeaders(firstRow || {});
+        state.headerMap = headerMap;
+
+        if (missing.length) {
+          console.warn('Beberapa kolom penting tidak ditemukan:', missing);
+        }
+
         const mapped = (parsed.data || [])
           .slice(0, APP_CONFIG.maxRows)
-          .map(mapRow)
+          .map((row, index) => mapRow(row, index))
           .filter(Boolean);
 
         state.participants = dedupeRows(mapped);
@@ -613,11 +737,17 @@
         state.cacheSource = 'jaringan';
         saveCache(state.participants);
         updateHeaderInfo();
+
+        if (!state.participants.length) {
+          state.loadError = 'Data peserta kosong setelah diproses. Periksa header spreadsheet.';
+          el.cacheText.textContent = state.loadError;
+        }
       } catch (error) {
         console.error(error);
+        state.loadError = 'Gagal memuat data. Pastikan spreadsheet dapat diakses.';
         if (!state.participants.length) {
           el.lastUpdatedText.textContent = 'Gagal memuat data';
-          el.cacheText.textContent = 'Pastikan spreadsheet dapat diakses.';
+          el.cacheText.textContent = state.loadError;
         }
       } finally {
         setLoadingState(false);
