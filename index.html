@@ -1016,35 +1016,50 @@ th{background:#f8fafc;text-align:left}
     }
 
     function runSelfCheck() {
-      const nameQuery = cleanText(el.selfCheckName.value);
+      const nameQuery = cleanText(el.selfCheckName.value).toLowerCase();
       const phoneQuery = normalizePhone(el.selfCheckPhone.value);
 
+      el.selfCheckEmpty.classList.add('hidden');
+      el.selfCheckResult.classList.add('hidden');
+
       if (!nameQuery && !phoneQuery) {
-        el.selfCheckResult.classList.remove('hidden');
-        el.selfCheckResult.innerHTML = '<div class="text-rose-600 font-bold">Masukkan nama atau nomor WhatsApp terlebih dahulu.</div>';
+        el.selfCheckEmpty.textContent = 'Masukkan nama peserta atau nomor WhatsApp terlebih dahulu.';
+        el.selfCheckEmpty.classList.remove('hidden');
         return;
       }
 
-      const matches = state.participants.filter(item => {
-        const nameOk = nameQuery ? similarity(item.nama, nameQuery) >= 0.65 || sanitizeForSearch(item.nama).includes(sanitizeForSearch(nameQuery)) : true;
-        const phoneOk = phoneQuery ? normalizePhone(item.kontak).includes(phoneQuery) : true;
-        return nameOk && phoneOk;
-      }).slice(0, 5);
+      let match = null;
+
+      if (phoneQuery) {
+        match = state.participants.find(item => normalizePhone(item.kontak) === phoneQuery);
+      }
+
+      if (!match && nameQuery) {
+        match = state.participants.find(item => cleanText(item.nama).toLowerCase() === nameQuery);
+      }
+
+      if (!match) {
+        el.selfCheckEmpty.textContent = 'Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.';
+        el.selfCheckEmpty.classList.remove('hidden');
+        return;
+      }
+
+      el.selfCheckResultName.textContent = match.nama || '-';
+      el.selfCheckResultSchool.textContent = `${match.sekolah || '-'} • Kelas ${match.kelas || '-'}`;
+
+      if (match.status === 'LOLOS') {
+        el.selfCheckCard.className = 'rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 md:p-8 shadow-lg text-center';
+        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-emerald-600 text-white';
+        el.selfCheckResultStatus.textContent = 'LOLOS';
+        el.selfCheckResultNote.textContent = 'Selamat, kamu dinyatakan lolos seleksi. Silakan ikuti informasi lanjutan dari panitia.';
+      } else {
+        el.selfCheckCard.className = 'rounded-[2rem] border border-amber-200 bg-amber-50 p-6 md:p-8 shadow-lg text-center';
+        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-amber-500 text-white';
+        el.selfCheckResultStatus.textContent = 'TIDAK LOLOS';
+        el.selfCheckResultNote.textContent = 'Terima kasih sudah berpartisipasi. Tetap semangat dan tunggu informasi berikutnya dari panitia.';
+      }
 
       el.selfCheckResult.classList.remove('hidden');
-      if (!matches.length) {
-        el.selfCheckResult.innerHTML = '<div class="text-slate-600 font-bold">Data tidak ditemukan.</div><div class="text-slate-500 mt-1">Coba cek ejaan nama atau nomor WhatsApp.</div>';
-        return;
-      }
-
-      el.selfCheckResult.innerHTML = matches.map(item => `
-        <div class="rounded-xl border border-slate-200 bg-white p-3 ${item.status === 'LOLOS' ? 'border-emerald-200' : 'border-amber-200'}">
-          <div class="font-extrabold text-slate-800">${escapeHtml(item.nama)}</div>
-          <div class="text-slate-500 text-sm mt-1">${escapeHtml(item.sekolah)} • Kelas ${escapeHtml(item.kelas)}</div>
-          <div class="text-slate-500 text-sm mt-1">WA: ${escapeHtml(maskPhone(item.kontak))}</div>
-          <div class="mt-2 inline-flex px-3 py-1 rounded-full ${item.status === 'LOLOS' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-black text-xs">${escapeHtml(item.status)}</div>
-        </div>
-      `).join('<div class="space-y-2"></div>');
     }
 
     async function loadSpreadsheetData(bypassCache = false) {
