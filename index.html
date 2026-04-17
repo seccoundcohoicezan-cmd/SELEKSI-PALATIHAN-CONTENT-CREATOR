@@ -54,8 +54,7 @@
           </div>
           <p id="announcementText" class="text-emerald-50 text-sm leading-relaxed">Memuat pengumuman...</p>
           <div id="announcementExtras" class="text-emerald-100/90 text-xs mt-3 space-y-1"></div>
-          <p id="announcementHint" class="text-emerald-100/80 text-xs mt-3">Pengumuman bisa diubah dari sheet CONFIG tanpa deploy ulang.</p>
-        </div>
+</div>
       </div>
     </header>
 
@@ -76,16 +75,7 @@
         <p class="text-xs font-bold text-sky-500 uppercase tracking-widest">Total Sekolah</p>
         <div class="text-4xl font-black text-sky-600 mt-1" id="stat-sekolah">0</div>
       </div>
-
-      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-violet-100 col-span-1 xl:col-span-2">
-        <p class="text-xs font-bold text-violet-500 uppercase tracking-widest">Peserta Unik</p>
-        <div class="text-3xl font-black text-violet-700 mt-1" id="stat-unik">0</div>
-      </div>
-      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-rose-100 col-span-1 xl:col-span-2">
-        <p class="text-xs font-bold text-rose-500 uppercase tracking-widest">Duplikat Terdeteksi</p>
-        <div class="text-3xl font-black text-rose-600 mt-1" id="stat-duplicate">0</div>
-      </div>
-      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-indigo-100 col-span-1 xl:col-span-2">
+<div class="bg-white p-5 rounded-[2rem] shadow-sm border border-indigo-100 col-span-1 xl:col-span-2">
         <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest">Top Sekolah</p>
         <div class="text-sm font-extrabold text-indigo-700 mt-2 leading-relaxed" id="stat-top-school">-</div>
       </div>
@@ -94,65 +84,25 @@
         <div class="text-sm font-extrabold text-cyan-700 mt-2 leading-relaxed" id="stat-top-meta">-</div>
       </div>
     </section>
-
-    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-      <div id="selfCheckPanel" class="xl:col-span-1 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
-        <div class="flex items-center justify-between gap-3 mb-4">
-          <h2 class="font-extrabold text-slate-900 text-lg">Cek Status Mandiri</h2>
-          <span class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-500 font-bold">Nama / WA</span>
+    <section class="mb-8">
+      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 class="font-extrabold text-slate-900 text-lg">Cek Status Mandiri</h2>
+            <p class="text-sm text-slate-500 mt-1">Peserta bisa mencari status dengan nama atau nomor WhatsApp.</p>
+          </div>
+          <a href="./audit_data.html" class="inline-flex items-center justify-center px-4 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition">
+            Buka Panel Audit Data
+          </a>
         </div>
-        <div class="space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
           <input id="selfCheckName" type="text" placeholder="Masukkan nama peserta" class="w-full px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
           <input id="selfCheckPhone" type="text" placeholder="Atau masukkan nomor WhatsApp" class="w-full px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
-          <button id="selfCheckButton" class="w-full px-4 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition">Cek Sekarang</button>
-          <div id="selfCheckResult" class="hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm"></div>
+          <button id="selfCheckButton" class="w-full px-4 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">Cek Sekarang</button>
         </div>
-      </div>
-
-      <div id="auditPanel" class="xl:col-span-2 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 class="font-extrabold text-slate-900 text-lg">Panel Audit Data</h2>
-          <span class="text-xs px-3 py-1 rounded-full bg-rose-50 text-rose-600 font-bold">Untuk bersih-bersih spreadsheet</span>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
-            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Nomor Tidak Valid</p>
-            <p id="audit-invalid-phone" class="text-2xl font-black text-slate-800 mt-1">0</p>
-          </div>
-          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
-            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Status Kosong</p>
-            <p id="audit-empty-status" class="text-2xl font-black text-slate-800 mt-1">0</p>
-          </div>
-          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
-            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Nama Kosong</p>
-            <p id="audit-missing-name" class="text-2xl font-black text-slate-800 mt-1">0</p>
-          </div>
-          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
-            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Header Asing</p>
-            <p id="audit-unknown-header" class="text-2xl font-black text-slate-800 mt-1">0</p>
-          </div>
-          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
-            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Duplikat</p>
-            <p id="audit-duplicate" class="text-2xl font-black text-slate-800 mt-1">0</p>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div class="rounded-2xl border border-slate-100 p-4">
-            <p class="font-bold text-slate-700 mb-2">Header Tidak Dikenali</p>
-            <div id="audit-unknown-header-list" class="text-slate-500 leading-relaxed">-</div>
-          </div>
-          <div class="rounded-2xl border border-slate-100 p-4">
-            <p class="font-bold text-slate-700 mb-2">Contoh Duplikat</p>
-            <div id="audit-duplicate-list" class="text-slate-500 leading-relaxed">-</div>
-          </div>
-          <div class="rounded-2xl border border-slate-100 p-4">
-            <p class="font-bold text-slate-700 mb-2">Masalah Nomor</p>
-            <div id="audit-invalid-phone-list" class="text-slate-500 leading-relaxed">-</div>
-          </div>
-        </div>
+        <div id="selfCheckResult" class="hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm mt-4"></div>
       </div>
     </section>
-
     <section class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
       <div id="searchPanel" class="p-6 md:p-8 border-b border-slate-50">
         <div class="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between mb-4">
@@ -175,13 +125,14 @@
             <button id="exportCsvButton" class="px-5 py-3 rounded-2xl bg-sky-600 text-white font-bold hover:bg-sky-700 transition-all shadow-sm">
               Export CSV
             </button>
+            <a href="./audit_data.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm text-center">Audit Data</a>
             <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
               Muat Ulang Data
             </button>
           </div>
         </div>
 
-        <div id="advancedFilters" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+        <div id="advancedFilters" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
             <select id="statusFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full"></select>
           </div>
@@ -191,10 +142,7 @@
           <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
             <select id="classFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full"></select>
           </div>
-          <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-            <select id="teacherFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full"></select>
-          </div>
-          <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+<div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
             <select id="sortFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full">
               <option value="row-asc">Urutkan: Baris Awal</option>
               <option value="name-asc">Nama A-Z</option>
@@ -203,13 +151,7 @@
               <option value="status-asc">Status A-Z</option>
             </select>
           </div>
-          <div class="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-            <label class="flex items-center gap-2 text-sm font-bold text-slate-600 cursor-pointer">
-              <input id="duplicatesOnlyToggle" type="checkbox" class="rounded border-slate-300">
-              Hanya duplikat
-            </label>
-          </div>
-        </div>
+</div>
       </div>
 
       <div id="utilityBar" class="px-6 md:px-8 py-4 bg-slate-50/60 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
@@ -279,7 +221,7 @@
 
       <div class="p-6 bg-slate-50/50 border-t border-slate-50 text-center">
         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">
-          Sinkronisasi Google Spreadsheet • Stabil untuk dataset besar • Cache lokal • Audit data • Filter lanjut
+          Sinkronisasi Google Spreadsheet • Data bersih otomatis • Pagination • Cache lokal
         </p>
       </div>
     </section>
@@ -332,7 +274,6 @@
       announcementText: document.getElementById('announcementText'),
       announcementMeta: document.getElementById('announcementMeta'),
       announcementExtras: document.getElementById('announcementExtras'),
-      announcementHint: document.getElementById('announcementHint'),
       lastUpdatedText: document.getElementById('lastUpdatedText'),
       cacheIndicator: document.getElementById('cacheIndicator'),
 
@@ -340,8 +281,6 @@
       statLolos: document.getElementById('stat-lolos'),
       statTidakLolos: document.getElementById('stat-tidak-lolos'),
       statSekolah: document.getElementById('stat-sekolah'),
-      statUnik: document.getElementById('stat-unik'),
-      statDuplicate: document.getElementById('stat-duplicate'),
       statTopSchool: document.getElementById('stat-top-school'),
       statTopMeta: document.getElementById('stat-top-meta'),
 
@@ -350,22 +289,11 @@
       selfCheckButton: document.getElementById('selfCheckButton'),
       selfCheckResult: document.getElementById('selfCheckResult'),
 
-      auditInvalidPhone: document.getElementById('audit-invalid-phone'),
-      auditEmptyStatus: document.getElementById('audit-empty-status'),
-      auditMissingName: document.getElementById('audit-missing-name'),
-      auditUnknownHeader: document.getElementById('audit-unknown-header'),
-      auditDuplicate: document.getElementById('audit-duplicate'),
-      auditUnknownHeaderList: document.getElementById('audit-unknown-header-list'),
-      auditDuplicateList: document.getElementById('audit-duplicate-list'),
-      auditInvalidPhoneList: document.getElementById('audit-invalid-phone-list'),
-
       searchInput: document.getElementById('searchInput'),
       statusFilter: document.getElementById('statusFilter'),
       schoolFilter: document.getElementById('schoolFilter'),
       classFilter: document.getElementById('classFilter'),
-      teacherFilter: document.getElementById('teacherFilter'),
       sortFilter: document.getElementById('sortFilter'),
-      duplicatesOnlyToggle: document.getElementById('duplicatesOnlyToggle'),
       pageSizeSelect: document.getElementById('pageSizeSelect'),
       togglePublicModeButton: document.getElementById('togglePublicModeButton'),
       toggleAutoRefreshButton: document.getElementById('toggleAutoRefreshButton'),
@@ -439,6 +367,18 @@
       const raw = cleanText(value);
       if (!raw) return '-';
       return raw.replace(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/g, (match) => maskPhone(match));
+    }
+
+    function stripPhoneFromText(value) {
+      const raw = cleanText(value);
+      if (!raw) return '-';
+      const stripped = raw
+        .replace(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/g, '')
+        .replace(/[\s\-–—,;:()]+$/g, '')
+        .replace(/^[\s\-–—,;:()]+/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      return stripped || '-';
     }
 
     function isPhoneLikelyValid(value) {
@@ -588,16 +528,6 @@
       };
     }
 
-    function applyAuditToUi() {
-      el.auditInvalidPhone.textContent = state.audit.invalidPhoneCount;
-      el.auditEmptyStatus.textContent = state.audit.emptyStatusCount;
-      el.auditMissingName.textContent = state.audit.missingNameCount;
-      el.auditUnknownHeader.textContent = state.audit.unknownHeaders.length;
-      el.auditDuplicate.textContent = state.duplicateKeys.size;
-      el.auditUnknownHeaderList.innerHTML = state.audit.unknownHeaders.length ? state.audit.unknownHeaders.map(h => `<div>${escapeHtml(h)}</div>`).join('') : '-';
-      el.auditDuplicateList.innerHTML = state.duplicateExamples.length ? state.duplicateExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
-      el.auditInvalidPhoneList.innerHTML = state.audit.invalidPhoneExamples.length ? state.audit.invalidPhoneExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
-    }
 
     function countBy(items, key) {
       const map = new Map();
@@ -670,16 +600,12 @@
       const selectedStatus = el.statusFilter.value || 'Semua';
       const selectedSchool = el.schoolFilter.value || 'Semua Sekolah';
       const selectedClass = el.classFilter.value || 'Semua Kelas';
-      const selectedTeacher = el.teacherFilter.value || 'Semua Guru';
-      const duplicatesOnly = el.duplicatesOnlyToggle.checked;
 
       let items = state.participants.filter(item => {
         if (state.publicOnlyLolos && item.status !== 'LOLOS') return false;
         if (selectedStatus !== 'Semua' && item.status !== selectedStatus) return false;
         if (selectedSchool !== 'Semua Sekolah' && item.sekolah !== selectedSchool) return false;
         if (selectedClass !== 'Semua Kelas' && item.kelas !== selectedClass) return false;
-        if (selectedTeacher !== 'Semua Guru' && item.guru !== selectedTeacher) return false;
-        if (duplicatesOnly && !state.duplicateKeys.has(duplicateKey(item))) return false;
         if (!fuzzyMatch(item, searchTerm)) return false;
         return true;
       });
@@ -692,7 +618,6 @@
       const uniqueSchools = new Set(data.map(item => item.sekolah).filter(v => v && v !== '-'));
       const lolosCount = data.filter(item => item.status === 'LOLOS').length;
       const tidakLolosCount = data.filter(item => item.status === 'TIDAK LOLOS').length;
-      const uniqueParticipants = dedupeRows(data).length;
 
       const topSchool = topEntry(countBy(data, 'sekolah'));
       const topGuru = topEntry(countBy(data, 'guru'));
@@ -702,11 +627,9 @@
       el.statLolos.textContent = lolosCount;
       el.statTidakLolos.textContent = tidakLolosCount;
       el.statSekolah.textContent = uniqueSchools.size;
-      el.statUnik.textContent = uniqueParticipants;
-      el.statDuplicate.textContent = Math.max(0, data.length - uniqueParticipants);
       el.statTopSchool.textContent = topSchool ? `${topSchool[0]} (${topSchool[1]})` : '-';
       el.statTopMeta.innerHTML = `
-        <div>${topGuru ? `Guru: ${escapeHtml(topGuru[0])} (${topGuru[1]})` : 'Guru: -'}</div>
+        <div>${topGuru ? `Guru: ${escapeHtml(stripPhoneFromText(topGuru[0]))}` : 'Guru: -'}</div>
         <div class="mt-1">${topKelas ? `Kelas: ${escapeHtml(topKelas[0])} (${topKelas[1]})` : 'Kelas: -'}</div>
       `;
     }
@@ -826,7 +749,6 @@
       el.mainTitle.textContent = title;
       el.announcementTitle.textContent = annTitle;
       el.announcementText.innerHTML = nl2brSafe(announcement);
-      el.announcementHint.textContent = 'Pengumuman aktif dibaca dari sheet CONFIG.';
       el.announcementCard.style.background = bannerColor;
       el.announcementCard.style.borderColor = bannerColor;
 
@@ -853,7 +775,6 @@
     async function loadConfig(bypassCache = false) {
       el.announcementText.innerHTML = nl2brSafe(APP_CONFIG.defaultAnnouncement);
       if (!APP_CONFIG.configGid) {
-        el.announcementHint.textContent = 'Isi configGid jika ingin pengumuman dibaca dari sheet CONFIG.';
         return;
       }
 
@@ -876,7 +797,6 @@
         applyConfig();
       } catch (error) {
         console.warn('Gagal memuat CONFIG:', error);
-        el.announcementHint.textContent = 'CONFIG belum aktif. Pengumuman memakai teks default di file.';
       }
     }
 
@@ -884,7 +804,6 @@
       setOptions(el.statusFilter, ['Semua', 'LOLOS', 'TIDAK LOLOS'], v => v === 'Semua' ? 'Semua Status' : v);
       setOptions(el.schoolFilter, optionList([...new Set(state.participants.map(item => item.sekolah).filter(v => v && v !== '-').sort((a,b)=>a.localeCompare(b,'id')))], 'Semua Sekolah'));
       setOptions(el.classFilter, optionList([...new Set(state.participants.map(item => item.kelas).filter(v => v && v !== '-').sort((a,b)=>a.localeCompare(b,'id')))], 'Semua Kelas'));
-      setOptions(el.teacherFilter, optionList([...new Set(state.participants.map(item => item.guru).filter(v => v && v !== '-').sort((a,b)=>a.localeCompare(b,'id')))], 'Semua Guru'));
     }
 
     function renderTable() {
@@ -894,7 +813,7 @@
 
       const { totalPages, start, end } = paginate(state.filteredParticipants);
 
-      el.resultSummary.textContent = `${state.filteredParticipants.length} hasil`;
+      el.resultSummary.textContent = `${state.filteredParticipants.length} data bersih`;
       el.pageSummary.textContent = `Halaman ${state.page} dari ${totalPages}`;
       el.paginationInfo.textContent = `Menampilkan ${state.filteredParticipants.length ? start + 1 : 0}-${end} dari ${state.filteredParticipants.length}`;
       el.prevPageButton.disabled = state.page <= 1;
@@ -912,7 +831,6 @@
 
       const html = state.pagedParticipants.map(item => {
         const style = getStatusStyle(item.status);
-        const isDup = state.duplicateKeys.has(duplicateKey(item));
         return `
           <tr class="hover:bg-slate-50/80 transition-all cursor-default align-top">
             <td class="px-8 py-6">
@@ -920,7 +838,7 @@
                 <div>
                   <div class="font-bold text-slate-800 text-base">${highlightText(item.nama, query)}</div>
                   <div class="text-xs text-slate-400 font-medium mt-1">${highlightText(maskPhone(item.kontak), query)}</div>
-                  ${isDup ? '<div class="mt-2 inline-flex px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 text-[11px] font-black">Duplikat</div>' : ''}
+                  
                 </div>
               </div>
             </td>
@@ -929,7 +847,7 @@
               <div class="text-xs text-slate-400 font-medium mt-1">Kelas ${highlightText(item.kelas || '-', query)}</div>
             </td>
             <td class="px-8 py-6">
-              <div class="text-sm text-slate-500 font-medium max-w-xs leading-relaxed">${highlightText(maskPhoneInText(item.guru || '-'), query)}</div>
+              <div class="text-sm text-slate-500 font-medium max-w-xs leading-relaxed">${highlightText(stripPhoneFromText(item.guru || '-'), query)}</div>
             </td>
             <td class="px-8 py-6">
               <div class="text-xs text-slate-400 font-medium">Baris Spreadsheet #${item._rowNumber}</div>
@@ -1041,7 +959,6 @@ th{background:#f8fafc;text-align:left}
         Kelas: item.kelas,
         Guru: maskPhoneInText(item.guru || '-'),
         Status: item.status,
-        Duplicate: state.duplicateKeys.has(duplicateKey(item)) ? 'YA' : 'TIDAK'
       })));
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1106,7 +1023,7 @@ th{background:#f8fafc;text-align:left}
           .filter(Boolean)
           .filter(item => item.nama);
 
-        state.participants = mapped.map(item => ({ ...item, searchIndex: buildSearchIndex(item) }));
+        state.participants = dedupeRows(mapped).map(item => ({ ...item, searchIndex: buildSearchIndex(item) }));
 
         if (!state.participants.length) {
           throw new Error('CSV berhasil diambil, tapi tidak ada baris valid yang bisa dibaca. Periksa nama header sheet.');
@@ -1114,7 +1031,6 @@ th{background:#f8fafc;text-align:left}
 
         buildDuplicates(state.participants);
         buildAudit(state.rawRows, state.participants);
-        applyAuditToUi();
         updateFilterOptions();
 
         const now = new Date();
@@ -1159,7 +1075,7 @@ th{background:#f8fafc;text-align:left}
 
     function attachEvents() {
       el.searchInput.addEventListener('input', () => scheduleRender(true));
-      [el.statusFilter, el.schoolFilter, el.classFilter, el.teacherFilter, el.sortFilter, el.duplicatesOnlyToggle].forEach(target => {
+      [el.statusFilter, el.schoolFilter, el.classFilter, el.sortFilter].forEach(target => {
         target.addEventListener('change', () => scheduleRender(true));
       });
 
