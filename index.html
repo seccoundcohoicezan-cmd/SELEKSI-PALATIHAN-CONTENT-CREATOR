@@ -145,13 +145,12 @@
               <p class="text-[11px] sm:text-xs font-extrabold tracking-[0.34em] uppercase text-slate-400">Hasil Seleksi</p>
               <div id="selfCheckResultIcon" class="mt-5 mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-white text-4xl shadow-[0_20px_45px_-24px_rgba(15,23,42,0.35)] ring-1 ring-slate-200" aria-hidden="true">✓</div>
               <h3 id="selfCheckResultName" class="mt-6 text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-[1.05]"></h3>
-              <p class="mt-3 text-sm sm:text-base text-slate-500 font-medium">Peserta terverifikasi</p>
-              <div class="mt-6 flex flex-col items-center gap-4">
+                            <div class="mt-6 flex flex-col items-center gap-4">
                 <div class="inline-flex max-w-full items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm shadow-slate-200/50">
                   <span class="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white text-lg shadow-sm" aria-hidden="true">⌂</span>
                   <p id="selfCheckResultSchool" class="text-base sm:text-lg md:text-xl font-bold text-slate-700"></p>
                 </div>
-                <div id="selfCheckResultStatusWrap" class="inline-flex items-center gap-3 rounded-full px-4 py-3 shadow-sm ring-1 backdrop-blur-sm">
+                <div id="selfCheckResultStatusWrap" class="inline-flex items-center gap-3 rounded-full px-5 py-3.5 shadow-sm ring-1 backdrop-blur-sm">
                   <span id="selfCheckResultStatusIcon" class="flex h-10 w-10 items-center justify-center rounded-full text-lg font-black" aria-hidden="true">✓</span>
                   <div class="text-left leading-tight">
                     <p class="text-[11px] font-extrabold uppercase tracking-[0.22em] text-slate-400">Status</p>
@@ -514,11 +513,11 @@
         el.selfCheckResultStatusIcon.textContent = '✓';
         el.selfCheckResultStatus.textContent = 'LOLOS';
       } else if (statusType === 'TIDAK LOLOS') {
-        el.selfCheckCard.className = 'relative overflow-hidden rounded-[2rem] border border-slate-200/90 bg-[linear-gradient(135deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.98)_38%,rgba(255,247,237,0.94)_100%)] p-6 sm:p-8 md:p-10 shadow-[0_30px_70px_-34px_rgba(15,23,42,0.24)] fade-in';
-        el.selfCheckResultIcon.textContent = '!';
-        el.selfCheckResultIcon.className = 'mt-5 mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-white text-4xl font-black text-amber-600 shadow-[0_20px_45px_-24px_rgba(15,23,42,0.28)] ring-1 ring-amber-200';
-        el.selfCheckResultStatusWrap.className = 'inline-flex items-center gap-3 rounded-full px-4 py-3 shadow-sm ring-1 ring-amber-200 bg-amber-50/95 backdrop-blur-sm';
-        el.selfCheckResultStatusIcon.className = 'flex h-10 w-10 items-center justify-center rounded-full text-lg font-black bg-amber-500 text-white shadow-sm';
+        el.selfCheckCard.className = 'relative overflow-hidden rounded-[2rem] border border-slate-200/90 bg-[linear-gradient(135deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.98)_38%,rgba(255,241,242,0.96)_100%)] p-6 sm:p-8 md:p-10 shadow-[0_30px_70px_-34px_rgba(15,23,42,0.24)] fade-in';
+        el.selfCheckResultIcon.textContent = '×';
+        el.selfCheckResultIcon.className = 'mt-5 mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-white text-4xl font-black text-rose-600 shadow-[0_20px_45px_-24px_rgba(15,23,42,0.28)] ring-1 ring-rose-200';
+        el.selfCheckResultStatusWrap.className = 'inline-flex items-center gap-3 rounded-full px-4 py-3 shadow-sm ring-1 ring-rose-200 bg-rose-50/95 backdrop-blur-sm';
+        el.selfCheckResultStatusIcon.className = 'flex h-10 w-10 items-center justify-center rounded-full text-lg font-black bg-rose-500 text-white shadow-sm';
         el.selfCheckResultStatusIcon.textContent = '!';
         el.selfCheckResultStatus.textContent = 'TIDAK LOLOS';
       } else {
