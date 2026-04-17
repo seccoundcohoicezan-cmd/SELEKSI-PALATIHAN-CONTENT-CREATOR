@@ -203,6 +203,20 @@
         .replace(/'/g, '&#039;');
     }
 
+    function maskPhone(value) {
+      const raw = cleanText(value);
+      const digits = raw.replace(/\D/g, '');
+
+      if (!digits) return '-';
+      if (digits.length <= 4) return '*'.repeat(digits.length);
+      if (digits.length <= 7) return `${digits.slice(0, 2)}${'*'.repeat(Math.max(1, digits.length - 4))}${digits.slice(-2)}`;
+
+      const start = digits.slice(0, 4);
+      const end = digits.slice(-3);
+      const middle = '*'.repeat(Math.max(3, digits.length - 7));
+      return `${start}${middle}${end}`;
+    }
+
     function pick(row, aliases, fallback = '-') {
       const keys = Object.keys(row || {});
       for (const alias of aliases) {
@@ -305,7 +319,7 @@
     }
 
     async function loadAnnouncement() {
-      el.announcementText.textContent = APP_CONFIG.defaultAnnouncement;
+      el.announcementText.innerHTML = escapeHtml(APP_CONFIG.defaultAnnouncement).replace(/\n/g, '<br>');
       if (!APP_CONFIG.configGid) {
         el.announcementHint.textContent = 'Isi configGid jika ingin pengumuman dibaca dari sheet CONFIG.';
         return;
@@ -329,7 +343,7 @@
 
         const announcement = configMap.get('PEMBERITAHUAN') || configMap.get('ANNOUNCEMENT');
         if (announcement) {
-          el.announcementText.textContent = announcement;
+          el.announcementText.innerHTML = escapeHtml(announcement).replace(/\n/g, '<br>');
           el.announcementHint.textContent = 'Pengumuman aktif dibaca dari sheet CONFIG.';
         }
       } catch (error) {
