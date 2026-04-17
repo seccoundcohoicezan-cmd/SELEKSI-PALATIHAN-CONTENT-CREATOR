@@ -67,13 +67,55 @@
         <a href="./index.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
           Kembali ke Landing
         </a>
+        <button id="lockButton" class="px-5 py-3 rounded-2xl bg-white border border-rose-200 text-rose-600 font-bold hover:bg-rose-50 transition-all shadow-sm">
+          Kunci Halaman
+        </button>
         <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
           Muat Ulang Data
         </button>
       </div>
     </header>
 
-    <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+      <div class="bg-white rounded-[2.2rem] border border-slate-200 p-7 shadow-sm">
+        <p class="text-sm md:text-base font-bold tracking-[0.14em] uppercase text-slate-400">Total Peserta</p>
+        <div class="text-5xl font-black text-slate-900 mt-3" id="summary-total-peserta">0</div>
+      </div>
+      <div class="bg-white rounded-[2.2rem] border border-emerald-200 p-7 shadow-sm">
+        <p class="text-sm md:text-base font-bold tracking-[0.14em] uppercase text-emerald-500">Status Lolos</p>
+        <div class="text-5xl font-black text-emerald-600 mt-3" id="summary-lolos">0</div>
+      </div>
+      <div class="bg-white rounded-[2.2rem] border border-amber-200 p-7 shadow-sm">
+        <p class="text-sm md:text-base font-bold tracking-[0.14em] uppercase text-amber-500">Status Tidak Lolos</p>
+        <div class="text-5xl font-black text-amber-600 mt-3" id="summary-tidak-lolos">0</div>
+      </div>
+      <div class="bg-white rounded-[2.2rem] border border-sky-200 p-7 shadow-sm">
+        <p class="text-sm md:text-base font-bold tracking-[0.14em] uppercase text-sky-500">Total Sekolah</p>
+        <div class="text-5xl font-black text-sky-600 mt-3" id="summary-total-sekolah">0</div>
+      </div>
+      <div class="bg-white rounded-[2.2rem] border border-violet-200 p-7 shadow-sm">
+        <p class="text-sm md:text-base font-bold tracking-[0.14em] uppercase text-violet-500">Peserta Unik</p>
+        <div class="text-5xl font-black text-violet-600 mt-3" id="summary-peserta-unik">0</div>
+      </div>
+      <div class="bg-white rounded-[2.2rem] border border-rose-200 p-7 shadow-sm">
+        <p class="text-sm md:text-base font-bold tracking-[0.14em] uppercase text-rose-500">Duplikat Terdeteksi</p>
+        <div class="text-5xl font-black text-rose-600 mt-3" id="audit-duplicate">0</div>
+        <p class="text-sm font-semibold text-rose-400 mt-3" id="audit-duplicate-groups">0 grup</p>
+      </div>
+      <div class="bg-white rounded-[2.2rem] border border-indigo-200 p-7 shadow-sm">
+        <p class="text-sm md:text-base font-bold tracking-[0.14em] uppercase text-indigo-500">Top Sekolah</p>
+        <div class="text-xl md:text-2xl font-black text-indigo-700 mt-5 leading-tight" id="summary-top-sekolah">-</div>
+      </div>
+      <div class="bg-white rounded-[2.2rem] border border-cyan-200 p-7 shadow-sm">
+        <p class="text-sm md:text-base font-bold tracking-[0.14em] uppercase text-cyan-500">Top Guru / Kelas</p>
+        <div class="space-y-3 mt-5 text-cyan-800">
+          <div class="text-lg font-extrabold leading-snug" id="summary-top-guru">Guru: -</div>
+          <div class="text-lg font-extrabold leading-snug" id="summary-top-kelas">Kelas: -</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
       <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nomor Tidak Valid</p>
         <div class="text-4xl font-black text-slate-900 mt-1" id="audit-invalid-phone">0</div>
@@ -91,8 +133,8 @@
         <div class="text-4xl font-black text-slate-900 mt-1" id="audit-unknown-header">0</div>
       </div>
       <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-rose-100">
-        <p class="text-xs font-bold text-rose-500 uppercase tracking-widest">Contoh Duplikat</p>
-        <div class="text-4xl font-black text-rose-600 mt-1" id="audit-duplicate">0</div>
+        <p class="text-xs font-bold text-rose-500 uppercase tracking-widest">Grup Duplikat</p>
+        <div class="text-4xl font-black text-rose-600 mt-1" id="audit-duplicate-group-card">0</div>
       </div>
     </section>
 
@@ -177,7 +219,6 @@
 
 <script>
 const ADMIN_PASSWORD = '606';
-const SESSION_KEY = 'audit_admin_access';
 
 const APP_CONFIG = {
   sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
@@ -204,6 +245,7 @@ const el = {
   loginForm: document.getElementById('loginForm'),
   passwordInput: document.getElementById('passwordInput'),
   loginError: document.getElementById('loginError'),
+  lockButton: document.getElementById('lockButton'),
   refreshButton: document.getElementById('refreshButton'),
   searchInput: document.getElementById('searchInput'),
   clearSearchButton: document.getElementById('clearSearchButton'),
@@ -214,11 +256,21 @@ const el = {
   emptyState: document.getElementById('emptyState'),
   errorState: document.getElementById('errorState'),
   errorMessage: document.getElementById('errorMessage'),
+  summaryTotalPeserta: document.getElementById('summary-total-peserta'),
+  summaryLolos: document.getElementById('summary-lolos'),
+  summaryTidakLolos: document.getElementById('summary-tidak-lolos'),
+  summaryTotalSekolah: document.getElementById('summary-total-sekolah'),
+  summaryPesertaUnik: document.getElementById('summary-peserta-unik'),
+  summaryTopSekolah: document.getElementById('summary-top-sekolah'),
+  summaryTopGuru: document.getElementById('summary-top-guru'),
+  summaryTopKelas: document.getElementById('summary-top-kelas'),
   auditInvalidPhone: document.getElementById('audit-invalid-phone'),
   auditEmptyStatus: document.getElementById('audit-empty-status'),
   auditMissingName: document.getElementById('audit-missing-name'),
   auditUnknownHeader: document.getElementById('audit-unknown-header'),
   auditDuplicate: document.getElementById('audit-duplicate'),
+  auditDuplicateGroups: document.getElementById('audit-duplicate-groups'),
+  auditDuplicateGroupCard: document.getElementById('audit-duplicate-group-card'),
   auditUnknownHeaderList: document.getElementById('audit-unknown-header-list'),
   auditDuplicateList: document.getElementById('audit-duplicate-list'),
   auditInvalidPhoneList: document.getElementById('audit-invalid-phone-list')
@@ -360,6 +412,43 @@ function enterApp() {
   el.loginScreen.classList.add('hidden');
   el.appShell.classList.remove('hidden');
 }
+
+function formatCountLabel(value, label = 'data') {
+  return `${value} ${label}`;
+}
+function getMostFrequentValue(items, selector) {
+  const counts = new Map();
+  for (const item of items) {
+    const value = cleanText(selector(item));
+    if (!value || value === '-') continue;
+    counts.set(value, (counts.get(value) || 0) + 1);
+  }
+  if (!counts.size) return null;
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+}
+function renderMainSummary(mappedData, duplicateRows, duplicateGroups) {
+  const totalPeserta = mappedData.length;
+  const totalLolos = mappedData.filter(item => item.status === 'LOLOS').length;
+  const totalTidakLolos = totalPeserta - totalLolos;
+  const sekolahSet = new Set(mappedData.map(item => cleanText(item.sekolah)).filter(value => value && value !== '-'));
+  const uniqueParticipantCount = totalPeserta - duplicateRows;
+  const topSekolah = getMostFrequentValue(mappedData, item => item.sekolah);
+  const topGuru = getMostFrequentValue(mappedData, item => item.guruPhone ? `${item.guru} (${item.guruPhone})` : item.guru);
+  const topKelas = getMostFrequentValue(mappedData, item => item.kelas);
+
+  el.summaryTotalPeserta.textContent = totalPeserta;
+  el.summaryLolos.textContent = totalLolos;
+  el.summaryTidakLolos.textContent = totalTidakLolos;
+  el.summaryTotalSekolah.textContent = sekolahSet.size;
+  el.summaryPesertaUnik.textContent = Math.max(uniqueParticipantCount, 0);
+  el.summaryTopSekolah.textContent = topSekolah ? `${topSekolah[0]} (${topSekolah[1]})` : '-';
+  el.summaryTopGuru.textContent = topGuru ? `Guru: ${topGuru[0]} (${topGuru[1]})` : 'Guru: -';
+  el.summaryTopKelas.textContent = topKelas ? `Kelas: ${topKelas[0]} (${topKelas[1]})` : 'Kelas: -';
+  el.auditDuplicate.textContent = duplicateRows;
+  el.auditDuplicateGroups.textContent = `${duplicateGroups} grup`;
+  el.auditDuplicateGroupCard.textContent = duplicateGroups;
+}
+
 function renderAuditSummary(rawRows, mappedData) {
   const headerSet = new Set();
   (rawRows || []).slice(0, 3).forEach(row => Object.keys(row || {}).forEach(key => headerSet.add(normalizeHeader(key))));
@@ -388,14 +477,22 @@ function renderAuditSummary(rawRows, mappedData) {
     const key = duplicateKey(item);
     counts.set(key, (counts.get(key) || 0) + 1);
   });
-  state.duplicateKeys = new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
-  const duplicateExamples = mappedData.filter(item => state.duplicateKeys.has(duplicateKey(item))).slice(0, 8).map(item => `${item.nama || '(tanpa nama)'} • ${item.sekolah || '-'}`);
+
+  const duplicateEntries = [...counts.entries()].filter(([, count]) => count > 1);
+  state.duplicateKeys = new Set(duplicateEntries.map(([key]) => key));
+  const duplicateGroups = duplicateEntries.length;
+  const duplicateRows = duplicateEntries.reduce((total, [, count]) => total + count, 0);
+  const duplicateExamples = duplicateEntries.slice(0, 8).map(([key, count]) => {
+    const sample = mappedData.find(item => duplicateKey(item) === key) || {};
+    return `${sample.nama || '(tanpa nama)'} • ${sample.sekolah || '-'} • ${formatCountLabel(count)}`;
+  });
+
+  renderMainSummary(mappedData, duplicateRows, duplicateGroups);
 
   el.auditInvalidPhone.textContent = invalidPhoneCount;
   el.auditEmptyStatus.textContent = emptyStatusCount;
   el.auditMissingName.textContent = missingNameCount;
   el.auditUnknownHeader.textContent = unknownHeaders.length;
-  el.auditDuplicate.textContent = duplicateExamples.length;
   el.auditUnknownHeaderList.innerHTML = unknownHeaders.length ? unknownHeaders.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
   el.auditDuplicateList.innerHTML = duplicateExamples.length ? duplicateExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
   el.auditInvalidPhoneList.innerHTML = invalidPhoneExamples.length ? invalidPhoneExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
@@ -471,24 +568,57 @@ async function loadAudit() {
     setLoadingState(false);
   }
 }
-function initAuth() {
-  const hasAccess = sessionStorage.getItem(SESSION_KEY) === 'true';
+function resetAccessGate({ clearData = false } = {}) {
+  el.loginScreen.classList.remove('hidden');
+  el.appShell.classList.add('hidden');
+  el.passwordInput.value = '';
+  el.loginError.classList.add('hidden');
 
-  if (hasAccess) {
-    enterApp();
-    loadAudit();
-    return;
+  if (clearData) {
+    state.rows = [];
+    state.filteredRows = [];
+    state.duplicateKeys = new Set();
+    el.searchInput.value = '';
+    el.tableBody.innerHTML = '';
+    el.tableInfo.textContent = '0 baris';
+    el.summaryTotalPeserta.textContent = '0';
+    el.summaryLolos.textContent = '0';
+    el.summaryTidakLolos.textContent = '0';
+    el.summaryTotalSekolah.textContent = '0';
+    el.summaryPesertaUnik.textContent = '0';
+    el.summaryTopSekolah.textContent = '-';
+    el.summaryTopGuru.textContent = 'Guru: -';
+    el.summaryTopKelas.textContent = 'Kelas: -';
+    el.auditInvalidPhone.textContent = '0';
+    el.auditEmptyStatus.textContent = '0';
+    el.auditMissingName.textContent = '0';
+    el.auditUnknownHeader.textContent = '0';
+    el.auditDuplicate.textContent = '0';
+    el.auditDuplicateGroups.textContent = '0 grup';
+    el.auditDuplicateGroupCard.textContent = '0';
+    el.auditUnknownHeaderList.innerHTML = '-';
+    el.auditDuplicateList.innerHTML = '-';
+    el.auditInvalidPhoneList.innerHTML = '-';
+    el.tableWrapper.classList.add('hidden');
+    el.emptyState.classList.add('hidden');
+    setError('');
+    setLoadingState(false);
   }
 
-  el.loginForm.addEventListener('submit', (event) => {
+  requestAnimationFrame(() => el.passwordInput.focus());
+}
+function initAuth() {
+  resetAccessGate();
+
+  el.loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const password = el.passwordInput.value;
 
     if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(SESSION_KEY, 'true');
       el.loginError.classList.add('hidden');
       enterApp();
-      loadAudit();
+      el.passwordInput.value = '';
+      await loadAudit();
       return;
     }
 
@@ -496,8 +626,13 @@ function initAuth() {
     el.passwordInput.focus();
     el.passwordInput.select();
   });
+
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) resetAccessGate({ clearData: true });
+  });
 }
 function attachEvents() {
+  el.lockButton.addEventListener('click', () => resetAccessGate({ clearData: true }));
   el.refreshButton.addEventListener('click', loadAudit);
   el.searchInput.addEventListener('input', scheduleSearchRender);
   el.clearSearchButton.addEventListener('click', () => {
