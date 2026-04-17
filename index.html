@@ -10,25 +10,27 @@
   <style>
     :root { color-scheme: light; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .glass-card { background: rgba(255,255,255,0.82); backdrop-filter: blur(12px); }
     .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    mark { background: #fef08a; color: inherit; border-radius: 4px; padding: 0 .08rem; }
     @media print {
+      #appShell, #searchPanel, #actionBar, #advancedFilters, #auditPanel, #selfCheckPanel, #paginationBar, #utilityBar {
+        display: none !important;
+      }
       body { background: white !important; }
-      #appShell, #actionBar, #searchPanel, #refreshButton, #exportPdfButton { display: none !important; }
     }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
   <div id="appShell" class="max-w-7xl mx-auto px-4 pt-8 md:pt-12">
-    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-      <div>
+    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+      <div class="flex-1">
         <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm mb-4 text-xs font-bold tracking-[0.2em] uppercase text-emerald-600">
           <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-          Pengumuman Resmi
+          <span id="officialLabel">Pengumuman Resmi</span>
         </div>
-        <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+        <h1 id="mainTitle" class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
           PENGUMUMAN SELEKSI PELATIHAN CONTENT CREATOR
         </h1>
         <div class="flex flex-wrap items-center gap-3 mt-4 text-slate-500 font-medium">
@@ -38,58 +40,192 @@
           </span>
           <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
           <span id="lastUpdatedText" class="text-slate-500">Memuat data terbaru...</span>
+          <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+          <span id="cacheIndicator" class="text-slate-400 text-sm">Cache: belum ada</span>
         </div>
       </div>
 
-      <div class="bg-emerald-600 text-white p-5 rounded-3xl shadow-xl shadow-emerald-100 flex items-start gap-4 max-w-xl border-b-4 border-emerald-700">
+      <div id="announcementCard" class="text-white p-5 rounded-3xl shadow-xl flex items-start gap-4 max-w-xl border-b-4" style="background:#059669;border-color:#047857;box-shadow:0 24px 40px rgba(5,150,105,.20);">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 shrink-0 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div>
-          <h3 class="font-bold text-lg mb-1 italic">Pemberitahuan</h3>
+        <div class="w-full">
+          <div class="flex flex-wrap gap-2 items-center justify-between">
+            <h3 id="announcementTitle" class="font-bold text-lg mb-1 italic">Pemberitahuan</h3>
+            <span id="announcementMeta" class="text-emerald-100/90 text-xs hidden"></span>
+          </div>
           <p id="announcementText" class="text-emerald-50 text-sm leading-relaxed">Memuat pengumuman...</p>
+          <div id="announcementExtras" class="text-emerald-100/90 text-xs mt-3 space-y-1"></div>
           <p id="announcementHint" class="text-emerald-100/80 text-xs mt-3">Pengumuman bisa diubah dari sheet CONFIG tanpa deploy ulang.</p>
         </div>
       </div>
     </header>
 
-    <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+    <section class="grid grid-cols-2 xl:grid-cols-8 gap-4 mb-8">
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 col-span-1 xl:col-span-2">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Peserta</p>
         <div class="text-4xl font-black text-slate-900 mt-1" id="stat-total">0</div>
       </div>
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-emerald-100 ring-4 ring-emerald-50/50">
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-emerald-100 ring-4 ring-emerald-50/50 col-span-1 xl:col-span-2">
         <p class="text-xs font-bold text-emerald-500 uppercase tracking-widest">Status Lolos</p>
         <div class="text-4xl font-black text-emerald-600 mt-1" id="stat-lolos">0</div>
       </div>
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-amber-100 ring-4 ring-amber-50/50">
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-amber-100 ring-4 ring-amber-50/50 col-span-1 xl:col-span-2">
         <p class="text-xs font-bold text-amber-500 uppercase tracking-widest">Status Tidak Lolos</p>
         <div class="text-4xl font-black text-amber-600 mt-1" id="stat-tidak-lolos">0</div>
       </div>
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-sky-100 ring-4 ring-sky-50/50">
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-sky-100 ring-4 ring-sky-50/50 col-span-1 xl:col-span-2">
         <p class="text-xs font-bold text-sky-500 uppercase tracking-widest">Total Sekolah</p>
         <div class="text-4xl font-black text-sky-600 mt-1" id="stat-sekolah">0</div>
+      </div>
+
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-violet-100 col-span-1 xl:col-span-2">
+        <p class="text-xs font-bold text-violet-500 uppercase tracking-widest">Peserta Unik</p>
+        <div class="text-3xl font-black text-violet-700 mt-1" id="stat-unik">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-rose-100 col-span-1 xl:col-span-2">
+        <p class="text-xs font-bold text-rose-500 uppercase tracking-widest">Duplikat Terdeteksi</p>
+        <div class="text-3xl font-black text-rose-600 mt-1" id="stat-duplicate">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-indigo-100 col-span-1 xl:col-span-2">
+        <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest">Top Sekolah</p>
+        <div class="text-sm font-extrabold text-indigo-700 mt-2 leading-relaxed" id="stat-top-school">-</div>
+      </div>
+      <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-cyan-100 col-span-1 xl:col-span-2">
+        <p class="text-xs font-bold text-cyan-500 uppercase tracking-widest">Top Guru / Kelas</p>
+        <div class="text-sm font-extrabold text-cyan-700 mt-2 leading-relaxed" id="stat-top-meta">-</div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+      <div id="selfCheckPanel" class="xl:col-span-1 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <h2 class="font-extrabold text-slate-900 text-lg">Cek Status Mandiri</h2>
+          <span class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-500 font-bold">Nama / WA</span>
+        </div>
+        <div class="space-y-3">
+          <input id="selfCheckName" type="text" placeholder="Masukkan nama peserta" class="w-full px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
+          <input id="selfCheckPhone" type="text" placeholder="Atau masukkan nomor WhatsApp" class="w-full px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
+          <button id="selfCheckButton" class="w-full px-4 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition">Cek Sekarang</button>
+          <div id="selfCheckResult" class="hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm"></div>
+        </div>
+      </div>
+
+      <div id="auditPanel" class="xl:col-span-2 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="font-extrabold text-slate-900 text-lg">Panel Audit Data</h2>
+          <span class="text-xs px-3 py-1 rounded-full bg-rose-50 text-rose-600 font-bold">Untuk bersih-bersih spreadsheet</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Nomor Tidak Valid</p>
+            <p id="audit-invalid-phone" class="text-2xl font-black text-slate-800 mt-1">0</p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Status Kosong</p>
+            <p id="audit-empty-status" class="text-2xl font-black text-slate-800 mt-1">0</p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Nama Kosong</p>
+            <p id="audit-missing-name" class="text-2xl font-black text-slate-800 mt-1">0</p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Header Asing</p>
+            <p id="audit-unknown-header" class="text-2xl font-black text-slate-800 mt-1">0</p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Duplikat</p>
+            <p id="audit-duplicate" class="text-2xl font-black text-slate-800 mt-1">0</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div class="rounded-2xl border border-slate-100 p-4">
+            <p class="font-bold text-slate-700 mb-2">Header Tidak Dikenali</p>
+            <div id="audit-unknown-header-list" class="text-slate-500 leading-relaxed">-</div>
+          </div>
+          <div class="rounded-2xl border border-slate-100 p-4">
+            <p class="font-bold text-slate-700 mb-2">Contoh Duplikat</p>
+            <div id="audit-duplicate-list" class="text-slate-500 leading-relaxed">-</div>
+          </div>
+          <div class="rounded-2xl border border-slate-100 p-4">
+            <p class="font-bold text-slate-700 mb-2">Masalah Nomor</p>
+            <div id="audit-invalid-phone-list" class="text-slate-500 leading-relaxed">-</div>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-      <div id="searchPanel" class="p-6 md:p-8 border-b border-slate-50 flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
-        <div class="relative w-full xl:max-w-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="searchInput" placeholder="Cari nama, WhatsApp, sekolah, atau guru..." class="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white transition-all outline-none text-slate-700 font-medium shadow-inner" />
-          <p class="text-xs text-slate-400 mt-2 ml-1">Pencarian cepat aktif dengan debounce agar tetap ringan untuk 2.000 data.</p>
-        </div>
-
-        <div id="actionBar" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
-          <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 w-full sm:w-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" class="text-slate-400 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            <select id="statusFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full min-w-[180px]"></select>
+      <div id="searchPanel" class="p-6 md:p-8 border-b border-slate-50">
+        <div class="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between mb-4">
+          <div class="relative w-full xl:max-w-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Cari nama, WhatsApp, sekolah, atau guru..." class="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white transition-all outline-none text-slate-700 font-medium shadow-inner" />
+            <p class="text-xs text-slate-400 mt-2 ml-1">Pencarian cepat aktif dengan debounce, normalisasi nomor, dan highlight hasil.</p>
           </div>
 
-          <button id="exportPdfButton" class="px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all shadow-sm">
-            Export PDF
-          </button>
-          <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
-            Muat Ulang Data
-          </button>
+          <div id="actionBar" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
+            <button id="togglePublicModeButton" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition">
+              Mode Publik: Semua
+            </button>
+            <button id="toggleAutoRefreshButton" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition">
+              Auto Refresh: Off
+            </button>
+            <button id="exportPdfButton" class="px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all shadow-sm">
+              Export PDF
+            </button>
+            <button id="exportCsvButton" class="px-5 py-3 rounded-2xl bg-sky-600 text-white font-bold hover:bg-sky-700 transition-all shadow-sm">
+              Export CSV
+            </button>
+            <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
+              Muat Ulang Data
+            </button>
+          </div>
+        </div>
+
+        <div id="advancedFilters" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+          <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+            <select id="statusFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full"></select>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+            <select id="schoolFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full"></select>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+            <select id="classFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full"></select>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+            <select id="teacherFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full"></select>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+            <select id="sortFilter" class="bg-transparent font-bold text-slate-600 outline-none cursor-pointer py-2 w-full">
+              <option value="row-asc">Urutkan: Baris Awal</option>
+              <option value="name-asc">Nama A-Z</option>
+              <option value="name-desc">Nama Z-A</option>
+              <option value="school-asc">Sekolah A-Z</option>
+              <option value="status-asc">Status A-Z</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+            <label class="flex items-center gap-2 text-sm font-bold text-slate-600 cursor-pointer">
+              <input id="duplicatesOnlyToggle" type="checkbox" class="rounded border-slate-300">
+              Hanya duplikat
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="utilityBar" class="px-6 md:px-8 py-4 bg-slate-50/60 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+        <div class="text-sm text-slate-500">
+          <span id="resultSummary">0 hasil</span>
+          <span class="mx-2">•</span>
+          <span id="pageSummary">Halaman 1</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-slate-500 font-medium">Baris per halaman</span>
+          <select id="pageSizeSelect" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+          </select>
         </div>
       </div>
 
@@ -101,12 +237,13 @@
       </div>
 
       <div class="overflow-x-auto custom-scrollbar hidden" id="tableWrapper">
-        <table class="w-full text-left border-collapse min-w-[980px]">
+        <table class="w-full text-left border-collapse min-w-[1180px]">
           <thead>
             <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
               <th class="px-8 py-5">Peserta</th>
               <th class="px-8 py-5">Sekolah</th>
               <th class="px-8 py-5">Guru</th>
+              <th class="px-8 py-5">Meta</th>
               <th class="px-8 py-5">Status</th>
             </tr>
           </thead>
@@ -131,9 +268,18 @@
         </div>
       </div>
 
+      <div id="paginationBar" class="hidden px-6 md:px-8 py-5 border-t border-slate-100 bg-slate-50/60 flex flex-wrap justify-between gap-3 items-center">
+        <div class="text-sm text-slate-500"><span id="paginationInfo">Menampilkan 0-0 dari 0</span></div>
+        <div class="flex items-center gap-2">
+          <button id="prevPageButton" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 disabled:opacity-50">Sebelumnya</button>
+          <div id="pageButtons" class="flex items-center gap-2"></div>
+          <button id="nextPageButton" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 disabled:opacity-50">Berikutnya</button>
+        </div>
+      </div>
+
       <div class="p-6 bg-slate-50/50 border-t border-slate-50 text-center">
         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">
-          Sinkronisasi Google Spreadsheet • Stabil untuk dataset besar hingga 2.000 baris
+          Sinkronisasi Google Spreadsheet • Stabil untuk dataset besar • Cache lokal • Audit data • Filter lanjut
         </p>
       </div>
     </section>
@@ -144,36 +290,103 @@
       sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
       participantGid: '0',
       configGid: '825905406',
-      maxRows: 2000,
-      searchDebounceMs: 180,
-      defaultAnnouncement: 'Peserta terseleksi akan langsung ikut pelatihan di tempat (pada hari ini), untuk peserta yang belum lolos bisa mengikuti pelatihan batch dua (pengumuman menyusul), dan bisa mengikuti workshop online content tanggal 15 April jam 20.00.'
+      maxRows: 10000,
+      searchDebounceMs: 160,
+      defaultAnnouncementTitle: 'Pemberitahuan',
+      defaultAnnouncement: 'Peserta terseleksi akan langsung ikut pelatihan di tempat. Detail teknis dan pemberitahuan lanjutan dapat diubah dari sheet CONFIG tanpa deploy ulang.',
+      defaultInstitution: '',
+      defaultAutoRefreshMs: 0,
+      cacheTtlMs: 5 * 60 * 1000,
+      defaultPageSize: 50
     };
 
     const state = {
+      rawRows: [],
       participants: [],
       filteredParticipants: [],
-      lastLoadedAt: null,
-      searchTimer: null
+      pagedParticipants: [],
+      duplicateKeys: new Set(),
+      duplicateExamples: [],
+      audit: {
+        invalidPhoneCount: 0,
+        invalidPhoneExamples: [],
+        emptyStatusCount: 0,
+        missingNameCount: 0,
+        unknownHeaders: [],
+      },
+      searchTimer: null,
+      page: 1,
+      pageSize: APP_CONFIG.defaultPageSize,
+      autoRefreshTimer: null,
+      autoRefreshEnabled: false,
+      publicOnlyLolos: false,
+      configMap: new Map(),
+      cacheMeta: { source: 'network', at: null }
     };
 
     const el = {
-      tableBody: document.getElementById('tableBody'),
-      tableWrapper: document.getElementById('tableWrapper'),
+      officialLabel: document.getElementById('officialLabel'),
+      mainTitle: document.getElementById('mainTitle'),
+      announcementCard: document.getElementById('announcementCard'),
+      announcementTitle: document.getElementById('announcementTitle'),
+      announcementText: document.getElementById('announcementText'),
+      announcementMeta: document.getElementById('announcementMeta'),
+      announcementExtras: document.getElementById('announcementExtras'),
+      announcementHint: document.getElementById('announcementHint'),
+      lastUpdatedText: document.getElementById('lastUpdatedText'),
+      cacheIndicator: document.getElementById('cacheIndicator'),
+
+      statTotal: document.getElementById('stat-total'),
+      statLolos: document.getElementById('stat-lolos'),
+      statTidakLolos: document.getElementById('stat-tidak-lolos'),
+      statSekolah: document.getElementById('stat-sekolah'),
+      statUnik: document.getElementById('stat-unik'),
+      statDuplicate: document.getElementById('stat-duplicate'),
+      statTopSchool: document.getElementById('stat-top-school'),
+      statTopMeta: document.getElementById('stat-top-meta'),
+
+      selfCheckName: document.getElementById('selfCheckName'),
+      selfCheckPhone: document.getElementById('selfCheckPhone'),
+      selfCheckButton: document.getElementById('selfCheckButton'),
+      selfCheckResult: document.getElementById('selfCheckResult'),
+
+      auditInvalidPhone: document.getElementById('audit-invalid-phone'),
+      auditEmptyStatus: document.getElementById('audit-empty-status'),
+      auditMissingName: document.getElementById('audit-missing-name'),
+      auditUnknownHeader: document.getElementById('audit-unknown-header'),
+      auditDuplicate: document.getElementById('audit-duplicate'),
+      auditUnknownHeaderList: document.getElementById('audit-unknown-header-list'),
+      auditDuplicateList: document.getElementById('audit-duplicate-list'),
+      auditInvalidPhoneList: document.getElementById('audit-invalid-phone-list'),
+
       searchInput: document.getElementById('searchInput'),
       statusFilter: document.getElementById('statusFilter'),
+      schoolFilter: document.getElementById('schoolFilter'),
+      classFilter: document.getElementById('classFilter'),
+      teacherFilter: document.getElementById('teacherFilter'),
+      sortFilter: document.getElementById('sortFilter'),
+      duplicatesOnlyToggle: document.getElementById('duplicatesOnlyToggle'),
+      pageSizeSelect: document.getElementById('pageSizeSelect'),
+      togglePublicModeButton: document.getElementById('togglePublicModeButton'),
+      toggleAutoRefreshButton: document.getElementById('toggleAutoRefreshButton'),
+
+      tableBody: document.getElementById('tableBody'),
+      tableWrapper: document.getElementById('tableWrapper'),
       emptyState: document.getElementById('emptyState'),
       loadingState: document.getElementById('loadingState'),
       errorState: document.getElementById('errorState'),
       errorMessage: document.getElementById('errorMessage'),
       refreshButton: document.getElementById('refreshButton'),
       exportPdfButton: document.getElementById('exportPdfButton'),
-      lastUpdatedText: document.getElementById('lastUpdatedText'),
-      announcementText: document.getElementById('announcementText'),
-      announcementHint: document.getElementById('announcementHint'),
-      statTotal: document.getElementById('stat-total'),
-      statLolos: document.getElementById('stat-lolos'),
-      statTidakLolos: document.getElementById('stat-tidak-lolos'),
-      statSekolah: document.getElementById('stat-sekolah')
+      exportCsvButton: document.getElementById('exportCsvButton'),
+
+      resultSummary: document.getElementById('resultSummary'),
+      pageSummary: document.getElementById('pageSummary'),
+      paginationBar: document.getElementById('paginationBar'),
+      paginationInfo: document.getElementById('paginationInfo'),
+      pageButtons: document.getElementById('pageButtons'),
+      prevPageButton: document.getElementById('prevPageButton'),
+      nextPageButton: document.getElementById('nextPageButton')
     };
 
     const participantCsvUrls = [
@@ -203,18 +416,38 @@
         .replace(/'/g, '&#039;');
     }
 
-    function maskPhone(value) {
-      const raw = cleanText(value);
-      const digits = raw.replace(/\D/g, '');
+    function nl2brSafe(text) {
+      return escapeHtml(text).replace(/\n/g, '<br>');
+    }
 
+    function normalizePhone(value) {
+      const digits = cleanText(value).replace(/\D/g, '');
+      if (!digits) return '';
+      if (digits.startsWith('62')) return '0' + digits.slice(2);
+      return digits;
+    }
+
+    function maskPhone(value) {
+      const digits = normalizePhone(value);
       if (!digits) return '-';
       if (digits.length <= 4) return '*'.repeat(digits.length);
       if (digits.length <= 7) return `${digits.slice(0, 2)}${'*'.repeat(Math.max(1, digits.length - 4))}${digits.slice(-2)}`;
+      return `${digits.slice(0, 4)}${'*'.repeat(Math.max(3, digits.length - 7))}${digits.slice(-3)}`;
+    }
 
-      const start = digits.slice(0, 4);
-      const end = digits.slice(-3);
-      const middle = '*'.repeat(Math.max(3, digits.length - 7));
-      return `${start}${middle}${end}`;
+    function maskPhoneInText(value) {
+      const raw = cleanText(value);
+      if (!raw) return '-';
+      return raw.replace(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/g, (match) => maskPhone(match));
+    }
+
+    function isPhoneLikelyValid(value) {
+      const digits = normalizePhone(value);
+      return digits.length >= 10 && digits.length <= 15;
+    }
+
+    function sanitizeForSearch(value) {
+      return cleanText(value).toLowerCase();
     }
 
     function pick(row, aliases, fallback = '-') {
@@ -242,12 +475,273 @@
       return status === 'LOLOS'
         ? {
             badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-            icon: '<svg class="w-3.5 h-3.5 fill-emerald-500 text-white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd" /></svg>'
+            icon: '<svg class="w-3.5 h-3.5 fill-emerald-500 text-white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>'
           }
         : {
             badge: 'bg-amber-50 text-amber-700 ring-amber-200',
-            icon: '<svg class="w-3.5 h-3.5 fill-amber-500 text-white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 0 0-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 1 0 1.414 1.414L10 11.414l1.293 1.293a1 1 0 0 0 1.414-1.414L11.414 10l1.293-1.293a1 1 0 0 0-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>'
+            icon: '<svg class="w-3.5 h-3.5 fill-amber-500 text-white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>'
           };
+    }
+
+    function highlightText(text, query) {
+      const rawText = cleanText(text);
+      const q = cleanText(query);
+      if (!rawText || !q) return escapeHtml(rawText || '-');
+
+      const terms = [...new Set(q.split(/\s+/).filter(Boolean))];
+      let html = escapeHtml(rawText);
+      for (const term of terms) {
+        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        html = html.replace(new RegExp(`(${escapedTerm})`, 'ig'), '<mark>$1</mark>');
+      }
+      return html;
+    }
+
+    function similarity(a, b) {
+      a = sanitizeForSearch(a);
+      b = sanitizeForSearch(b);
+      if (!a || !b) return 0;
+      if (a.includes(b) || b.includes(a)) return 0.9;
+      const setA = new Set(a);
+      const setB = new Set(b);
+      const intersection = [...setA].filter(ch => setB.has(ch)).length;
+      return intersection / Math.max(setA.size, setB.size, 1);
+    }
+
+    function buildSearchIndex(item) {
+      return [
+        item.nama, item.kontak, normalizePhone(item.kontak),
+        item.sekolah, item.kelas, item.guru, normalizePhone(item.guru), item.status
+      ].join(' ').toLowerCase();
+    }
+
+    function knownHeaders() {
+      return new Set([
+        'asal sekolah', 'sekolah', 'kelas', 'nama', 'no whatsapp aktif', 'no whatsapp', 'whatsapp', 'wa',
+        'pihak guru yang mengajak kamu daftar', 'guru', 'nama guru', 'status', 'username', 'username /', 'username/','no whatsa'
+      ]);
+    }
+
+    function mapRow(row, index) {
+      const nama = pick(row, ['Nama', 'nama'], '');
+      const originalStatus = pick(row, ['STATUS', 'Status'], '');
+      const kontak = pick(row, ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'Whatsapp', 'WA'], '-');
+      const sekolah = pick(row, ['Asal Sekolah', 'Sekolah'], '-');
+      const kelas = pick(row, ['Kelas'], '-');
+      const guru = pick(row, ['Pihak Guru yang Mengajak Kamu Daftar', 'Guru', 'Nama Guru'], '-');
+
+      return {
+        _rowNumber: index + 2,
+        nama,
+        kontak,
+        sekolah,
+        kelas,
+        guru,
+        originalStatus,
+        status: normalizeStatus(originalStatus),
+      };
+    }
+
+    function duplicateKey(item) {
+      return `${sanitizeForSearch(item.nama)}|${normalizePhone(item.kontak)}|${sanitizeForSearch(item.sekolah)}`;
+    }
+
+    function buildDuplicates(data) {
+      const counts = new Map();
+      for (const item of data) {
+        if (!item.nama) continue;
+        const key = duplicateKey(item);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+      state.duplicateKeys = new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+      state.duplicateExamples = data
+        .filter(item => state.duplicateKeys.has(duplicateKey(item)))
+        .slice(0, 5)
+        .map(item => `${item.nama} • ${item.sekolah}`);
+    }
+
+    function buildAudit(parsedData, mappedData) {
+      const headerSet = new Set();
+      (parsedData || []).slice(0, 3).forEach(row => Object.keys(row || {}).forEach(key => headerSet.add(normalizeHeader(key))));
+      const unknownHeaders = [...headerSet].filter(h => h && !knownHeaders().has(h));
+
+      let invalidPhoneCount = 0;
+      let emptyStatusCount = 0;
+      let missingNameCount = 0;
+      const invalidPhoneExamples = [];
+
+      for (const item of mappedData) {
+        if (!item.nama) missingNameCount++;
+        if (!cleanText(item.originalStatus)) emptyStatusCount++;
+        if (!isPhoneLikelyValid(item.kontak)) {
+          invalidPhoneCount++;
+          if (invalidPhoneExamples.length < 5) invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • ${item.kontak || '-'}`);
+        }
+      }
+
+      state.audit = {
+        invalidPhoneCount,
+        invalidPhoneExamples,
+        emptyStatusCount,
+        missingNameCount,
+        unknownHeaders,
+      };
+    }
+
+    function applyAuditToUi() {
+      el.auditInvalidPhone.textContent = state.audit.invalidPhoneCount;
+      el.auditEmptyStatus.textContent = state.audit.emptyStatusCount;
+      el.auditMissingName.textContent = state.audit.missingNameCount;
+      el.auditUnknownHeader.textContent = state.audit.unknownHeaders.length;
+      el.auditDuplicate.textContent = state.duplicateKeys.size;
+      el.auditUnknownHeaderList.innerHTML = state.audit.unknownHeaders.length ? state.audit.unknownHeaders.map(h => `<div>${escapeHtml(h)}</div>`).join('') : '-';
+      el.auditDuplicateList.innerHTML = state.duplicateExamples.length ? state.duplicateExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
+      el.auditInvalidPhoneList.innerHTML = state.audit.invalidPhoneExamples.length ? state.audit.invalidPhoneExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
+    }
+
+    function countBy(items, key) {
+      const map = new Map();
+      items.forEach(item => {
+        const value = cleanText(item[key]);
+        if (!value || value === '-') return;
+        map.set(value, (map.get(value) || 0) + 1);
+      });
+      return map;
+    }
+
+    function topEntry(map) {
+      let top = null;
+      for (const [key, value] of map.entries()) {
+        if (!top || value > top[1]) top = [key, value];
+      }
+      return top;
+    }
+
+    function dedupeRows(data) {
+      const map = new Map();
+      for (const item of data) {
+        const key = duplicateKey(item);
+        if (!map.has(key)) map.set(key, item);
+      }
+      return Array.from(map.values());
+    }
+
+    function optionList(values, labelAll) {
+      return [labelAll, ...values.filter(Boolean)];
+    }
+
+    function setOptions(selectEl, options, labelMap = (v) => v) {
+      const current = selectEl.value;
+      selectEl.innerHTML = options.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(labelMap(v))}</option>`).join('');
+      selectEl.value = options.includes(current) ? current : options[0];
+    }
+
+    function sortParticipants(items) {
+      const mode = el.sortFilter.value || 'row-asc';
+      const sorted = [...items];
+      sorted.sort((a, b) => {
+        switch (mode) {
+          case 'name-asc': return a.nama.localeCompare(b.nama, 'id');
+          case 'name-desc': return b.nama.localeCompare(a.nama, 'id');
+          case 'school-asc': return a.sekolah.localeCompare(b.sekolah, 'id');
+          case 'status-asc': return a.status.localeCompare(b.status, 'id');
+          default: return a._rowNumber - b._rowNumber;
+        }
+      });
+      return sorted;
+    }
+
+    function fuzzyMatch(item, query) {
+      if (!query) return true;
+      const q = sanitizeForSearch(query);
+      const tokens = q.split(/\s+/).filter(Boolean);
+      if (!tokens.length) return true;
+
+      return tokens.every(token => {
+        if (item.searchIndex.includes(token)) return true;
+        const phoneToken = token.replace(/\D/g, '');
+        if (phoneToken && normalizePhone(item.kontak).includes(phoneToken)) return true;
+        return similarity(item.nama, token) >= 0.55 || similarity(item.sekolah, token) >= 0.55 || similarity(item.guru, token) >= 0.55;
+      });
+    }
+
+    function getFilteredParticipants() {
+      const searchTerm = cleanText(el.searchInput.value);
+      const selectedStatus = el.statusFilter.value || 'Semua';
+      const selectedSchool = el.schoolFilter.value || 'Semua Sekolah';
+      const selectedClass = el.classFilter.value || 'Semua Kelas';
+      const selectedTeacher = el.teacherFilter.value || 'Semua Guru';
+      const duplicatesOnly = el.duplicatesOnlyToggle.checked;
+
+      let items = state.participants.filter(item => {
+        if (state.publicOnlyLolos && item.status !== 'LOLOS') return false;
+        if (selectedStatus !== 'Semua' && item.status !== selectedStatus) return false;
+        if (selectedSchool !== 'Semua Sekolah' && item.sekolah !== selectedSchool) return false;
+        if (selectedClass !== 'Semua Kelas' && item.kelas !== selectedClass) return false;
+        if (selectedTeacher !== 'Semua Guru' && item.guru !== selectedTeacher) return false;
+        if (duplicatesOnly && !state.duplicateKeys.has(duplicateKey(item))) return false;
+        if (!fuzzyMatch(item, searchTerm)) return false;
+        return true;
+      });
+
+      items = sortParticipants(items);
+      return items;
+    }
+
+    function updateStats(data) {
+      const uniqueSchools = new Set(data.map(item => item.sekolah).filter(v => v && v !== '-'));
+      const lolosCount = data.filter(item => item.status === 'LOLOS').length;
+      const tidakLolosCount = data.filter(item => item.status === 'TIDAK LOLOS').length;
+      const uniqueParticipants = dedupeRows(data).length;
+
+      const topSchool = topEntry(countBy(data, 'sekolah'));
+      const topGuru = topEntry(countBy(data, 'guru'));
+      const topKelas = topEntry(countBy(data, 'kelas'));
+
+      el.statTotal.textContent = data.length;
+      el.statLolos.textContent = lolosCount;
+      el.statTidakLolos.textContent = tidakLolosCount;
+      el.statSekolah.textContent = uniqueSchools.size;
+      el.statUnik.textContent = uniqueParticipants;
+      el.statDuplicate.textContent = Math.max(0, data.length - uniqueParticipants);
+      el.statTopSchool.textContent = topSchool ? `${topSchool[0]} (${topSchool[1]})` : '-';
+      el.statTopMeta.innerHTML = `
+        <div>${topGuru ? `Guru: ${escapeHtml(topGuru[0])} (${topGuru[1]})` : 'Guru: -'}</div>
+        <div class="mt-1">${topKelas ? `Kelas: ${escapeHtml(topKelas[0])} (${topKelas[1]})` : 'Kelas: -'}</div>
+      `;
+    }
+
+    function paginate(items) {
+      const totalPages = Math.max(1, Math.ceil(items.length / state.pageSize));
+      if (state.page > totalPages) state.page = totalPages;
+      const start = (state.page - 1) * state.pageSize;
+      const end = start + state.pageSize;
+      state.pagedParticipants = items.slice(start, end);
+      return { totalPages, start, end: Math.min(end, items.length) };
+    }
+
+    function renderPageButtons(totalPages) {
+      const pages = [];
+      const current = state.page;
+      const add = v => pages.push(v);
+
+      add(1);
+      for (let i = Math.max(2, current - 1); i <= Math.min(totalPages - 1, current + 1); i++) add(i);
+      if (totalPages > 1) add(totalPages);
+
+      const uniquePages = [...new Set(pages)].filter(v => v >= 1 && v <= totalPages).sort((a,b) => a-b);
+      let html = '';
+      let prev = 0;
+      uniquePages.forEach(page => {
+        if (page - prev > 1) html += `<span class="px-1 text-slate-400">…</span>`;
+        html += `<button data-page="${page}" class="page-btn px-4 py-2 rounded-xl border font-bold ${page === current ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'}">${page}</button>`;
+        prev = page;
+      });
+      el.pageButtons.innerHTML = html;
+      el.pageButtons.querySelectorAll('.page-btn').forEach(btn => btn.addEventListener('click', () => {
+        state.page = Number(btn.dataset.page);
+        renderTable();
+      }));
     }
 
     function setLoadingState(isLoading) {
@@ -264,52 +758,48 @@
       if (hasError) {
         el.tableWrapper.classList.add('hidden');
         el.emptyState.classList.add('hidden');
+        el.paginationBar.classList.add('hidden');
       }
     }
 
-    function buildSearchIndex(item) {
-      return [item.nama, item.kontak, item.sekolah, item.kelas, item.guru, item.status]
-        .join(' ')
-        .toLowerCase();
+    function cacheKey(type) {
+      return `seleksi-content-creator:${type}:${APP_CONFIG.sheetId}`;
     }
 
-    function mapRow(row, index) {
-      const nama = pick(row, ['Nama', 'nama'], '');
-      if (!nama) return null;
-
-      const mapped = {
-        _rowNumber: index + 1,
-        nama,
-        kontak: pick(row, ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'Whatsapp', 'WA']),
-        sekolah: pick(row, ['Asal Sekolah', 'Sekolah']),
-        kelas: pick(row, ['Kelas']),
-        guru: pick(row, ['Pihak Guru yang Mengajak Kamu Daftar', 'Guru', 'Nama Guru']),
-        status: normalizeStatus(pick(row, ['STATUS', 'Status'], 'TIDAK LOLOS'))
-      };
-
-      mapped.searchIndex = buildSearchIndex(mapped);
-      return mapped;
+    function saveCache(type, value) {
+      localStorage.setItem(cacheKey(type), JSON.stringify({ at: Date.now(), value }));
     }
 
-    function dedupeRows(data) {
-      const map = new Map();
-      for (const item of data) {
-        const key = `${cleanText(item.nama).toLowerCase()}|${cleanText(item.kontak)}|${cleanText(item.sekolah).toLowerCase()}`;
-        map.set(key, item);
+    function readCache(type) {
+      try {
+        const raw = localStorage.getItem(cacheKey(type));
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.at > APP_CONFIG.cacheTtlMs) return null;
+        return parsed;
+      } catch {
+        return null;
       }
-      return Array.from(map.values());
     }
 
-    async function fetchCsvText(urls) {
+    async function fetchCsvText(urls, cacheType, bypassCache = false) {
+      if (!bypassCache) {
+        const cached = readCache(cacheType);
+        if (cached?.value) {
+          state.cacheMeta = { source: 'cache', at: cached.at };
+          return cached.value;
+        }
+      }
+
       let lastError = null;
       for (const url of urls) {
         try {
           const response = await fetch(url, { cache: 'no-store' });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const text = await response.text();
-          if (!text || text.trim().startsWith('<!DOCTYPE html')) {
-            throw new Error('Respon bukan CSV');
-          }
+          if (!text || text.trim().startsWith('<!DOCTYPE html')) throw new Error('Respon bukan CSV');
+          saveCache(cacheType, text);
+          state.cacheMeta = { source: 'network', at: Date.now() };
           return text;
         } catch (error) {
           lastError = error;
@@ -318,8 +808,50 @@
       throw lastError || new Error('CSV Google Sheets tidak bisa diambil');
     }
 
-    async function loadAnnouncement() {
-      el.announcementText.innerHTML = escapeHtml(APP_CONFIG.defaultAnnouncement).replace(/\n/g, '<br>');
+    function applyConfig() {
+      const cfg = state.configMap;
+      const title = cfg.get('JUDUL') || cfg.get('TITLE') || 'PENGUMUMAN SELEKSI PELATIHAN CONTENT CREATOR';
+      const label = cfg.get('LABEL_RESMI') || 'Pengumuman Resmi';
+      const annTitle = cfg.get('JUDUL_PEMBERITAHUAN') || cfg.get('ANNOUNCEMENT_TITLE') || APP_CONFIG.defaultAnnouncementTitle;
+      const announcement = cfg.get('PEMBERITAHUAN') || cfg.get('ANNOUNCEMENT') || APP_CONFIG.defaultAnnouncement;
+      const tanggal = cfg.get('TANGGAL') || '';
+      const lokasi = cfg.get('LOKASI') || '';
+      const instansi = cfg.get('INSTANSI') || APP_CONFIG.defaultInstitution || '';
+      const kontak = cfg.get('KONTAK_PANITIA') || '';
+      const bannerColor = cfg.get('BANNER_COLOR') || '#059669';
+      const publicOnly = ['1', 'true', 'yes', 'on', 'LOLOS'].includes((cfg.get('PUBLIC_ONLY_LOLOS') || '').toLowerCase());
+      const autoRefreshMs = Number(cfg.get('AUTO_REFRESH_MS') || APP_CONFIG.defaultAutoRefreshMs || 0);
+
+      el.officialLabel.textContent = label;
+      el.mainTitle.textContent = title;
+      el.announcementTitle.textContent = annTitle;
+      el.announcementText.innerHTML = nl2brSafe(announcement);
+      el.announcementHint.textContent = 'Pengumuman aktif dibaca dari sheet CONFIG.';
+      el.announcementCard.style.background = bannerColor;
+      el.announcementCard.style.borderColor = bannerColor;
+
+      const extras = [];
+      if (tanggal) extras.push(`<div><strong>Tanggal:</strong> ${escapeHtml(tanggal)}</div>`);
+      if (lokasi) extras.push(`<div><strong>Lokasi:</strong> ${escapeHtml(lokasi)}</div>`);
+      if (instansi) extras.push(`<div><strong>Instansi:</strong> ${escapeHtml(instansi)}</div>`);
+      if (kontak) extras.push(`<div><strong>Kontak Panitia:</strong> ${escapeHtml(maskPhoneInText(kontak))}</div>`);
+      el.announcementExtras.innerHTML = extras.join('');
+      el.announcementMeta.textContent = [tanggal, lokasi].filter(Boolean).join(' • ');
+      el.announcementMeta.classList.toggle('hidden', !el.announcementMeta.textContent);
+
+      state.publicOnlyLolos = publicOnly;
+      el.togglePublicModeButton.textContent = `Mode Publik: ${state.publicOnlyLolos ? 'Hanya Lolos' : 'Semua'}`;
+
+      if (autoRefreshMs > 0) {
+        state.autoRefreshEnabled = true;
+        startAutoRefresh(autoRefreshMs);
+      } else {
+        stopAutoRefresh();
+      }
+    }
+
+    async function loadConfig(bypassCache = false) {
+      el.announcementText.innerHTML = nl2brSafe(APP_CONFIG.defaultAnnouncement);
       if (!APP_CONFIG.configGid) {
         el.announcementHint.textContent = 'Isi configGid jika ingin pengumuman dibaca dari sheet CONFIG.';
         return;
@@ -331,56 +863,28 @@
       ];
 
       try {
-        const csvText = await fetchCsvText(configUrls);
+        const csvText = await fetchCsvText(configUrls, 'config', bypassCache);
         const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: 'greedy' });
-        const configMap = new Map();
+        state.configMap = new Map();
 
         for (const row of parsed.data || []) {
           const key = cleanText(row.KEY || row.Key || row.key);
           const value = cleanText(row.VALUE || row.Value || row.value);
-          if (key) configMap.set(key.toUpperCase(), value);
+          if (key) state.configMap.set(key.toUpperCase(), value);
         }
 
-        const announcement = configMap.get('PEMBERITAHUAN') || configMap.get('ANNOUNCEMENT');
-        if (announcement) {
-          el.announcementText.innerHTML = escapeHtml(announcement).replace(/\n/g, '<br>');
-          el.announcementHint.textContent = 'Pengumuman aktif dibaca dari sheet CONFIG.';
-        }
+        applyConfig();
       } catch (error) {
         console.warn('Gagal memuat CONFIG:', error);
         el.announcementHint.textContent = 'CONFIG belum aktif. Pengumuman memakai teks default di file.';
       }
     }
 
-    function updateStatusOptions() {
-      const options = ['Semua', 'LOLOS', 'TIDAK LOLOS'];
-      const currentValue = el.statusFilter.value || 'Semua';
-      el.statusFilter.innerHTML = options
-        .map((status) => `<option value="${escapeHtml(status)}">${escapeHtml(status === 'Semua' ? 'Semua Status' : status)}</option>`)
-        .join('');
-      el.statusFilter.value = options.includes(currentValue) ? currentValue : 'Semua';
-    }
-
-    function updateStats(data) {
-      const uniqueSchools = new Set(data.map((item) => item.sekolah).filter((school) => school && school !== '-'));
-      const lolosCount = data.filter((item) => item.status === 'LOLOS').length;
-      const tidakLolosCount = data.filter((item) => item.status === 'TIDAK LOLOS').length;
-
-      el.statTotal.textContent = data.length;
-      el.statLolos.textContent = lolosCount;
-      el.statTidakLolos.textContent = tidakLolosCount;
-      el.statSekolah.textContent = uniqueSchools.size;
-    }
-
-    function getFilteredParticipants() {
-      const searchTerm = cleanText(el.searchInput.value).toLowerCase();
-      const selectedStatus = el.statusFilter.value || 'Semua';
-
-      return state.participants.filter((item) => {
-        const matchesStatus = selectedStatus === 'Semua' || item.status === selectedStatus;
-        const matchesSearch = !searchTerm || item.searchIndex.includes(searchTerm);
-        return matchesStatus && matchesSearch;
-      });
+    function updateFilterOptions() {
+      setOptions(el.statusFilter, ['Semua', 'LOLOS', 'TIDAK LOLOS'], v => v === 'Semua' ? 'Semua Status' : v);
+      setOptions(el.schoolFilter, optionList([...new Set(state.participants.map(item => item.sekolah).filter(v => v && v !== '-').sort((a,b)=>a.localeCompare(b,'id')))], 'Semua Sekolah'));
+      setOptions(el.classFilter, optionList([...new Set(state.participants.map(item => item.kelas).filter(v => v && v !== '-').sort((a,b)=>a.localeCompare(b,'id')))], 'Semua Kelas'));
+      setOptions(el.teacherFilter, optionList([...new Set(state.participants.map(item => item.guru).filter(v => v && v !== '-').sort((a,b)=>a.localeCompare(b,'id')))], 'Semua Guru'));
     }
 
     function renderTable() {
@@ -388,26 +892,48 @@
       updateStats(state.filteredParticipants);
       el.tableBody.innerHTML = '';
 
+      const { totalPages, start, end } = paginate(state.filteredParticipants);
+
+      el.resultSummary.textContent = `${state.filteredParticipants.length} hasil`;
+      el.pageSummary.textContent = `Halaman ${state.page} dari ${totalPages}`;
+      el.paginationInfo.textContent = `Menampilkan ${state.filteredParticipants.length ? start + 1 : 0}-${end} dari ${state.filteredParticipants.length}`;
+      el.prevPageButton.disabled = state.page <= 1;
+      el.nextPageButton.disabled = state.page >= totalPages;
+      renderPageButtons(totalPages);
+
       if (!state.filteredParticipants.length) {
         el.tableWrapper.classList.add('hidden');
         el.emptyState.classList.remove('hidden');
+        el.paginationBar.classList.add('hidden');
         return;
       }
 
-      const html = state.filteredParticipants.map((item) => {
+      const query = cleanText(el.searchInput.value);
+
+      const html = state.pagedParticipants.map(item => {
         const style = getStatusStyle(item.status);
+        const isDup = state.duplicateKeys.has(duplicateKey(item));
         return `
           <tr class="hover:bg-slate-50/80 transition-all cursor-default align-top">
             <td class="px-8 py-6">
-              <div class="font-bold text-slate-800 text-base">${escapeHtml(item.nama)}</div>
-              <div class="text-xs text-slate-400 font-medium mt-1">${escapeHtml(maskPhone(item.kontak))}</div>
+              <div class="flex items-start gap-3">
+                <div>
+                  <div class="font-bold text-slate-800 text-base">${highlightText(item.nama, query)}</div>
+                  <div class="text-xs text-slate-400 font-medium mt-1">${highlightText(maskPhone(item.kontak), query)}</div>
+                  ${isDup ? '<div class="mt-2 inline-flex px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 text-[11px] font-black">Duplikat</div>' : ''}
+                </div>
+              </div>
             </td>
             <td class="px-8 py-6">
-              <div class="text-sm font-bold text-slate-700">${escapeHtml(item.sekolah)}</div>
-              <div class="text-xs text-slate-400 font-medium mt-1">Kelas ${escapeHtml(item.kelas || '-')}</div>
+              <div class="text-sm font-bold text-slate-700">${highlightText(item.sekolah, query)}</div>
+              <div class="text-xs text-slate-400 font-medium mt-1">Kelas ${highlightText(item.kelas || '-', query)}</div>
             </td>
             <td class="px-8 py-6">
-              <div class="text-sm text-slate-500 font-medium max-w-xs leading-relaxed">${escapeHtml(item.guru || '-')}</div>
+              <div class="text-sm text-slate-500 font-medium max-w-xs leading-relaxed">${highlightText(maskPhoneInText(item.guru || '-'), query)}</div>
+            </td>
+            <td class="px-8 py-6">
+              <div class="text-xs text-slate-400 font-medium">Baris Spreadsheet #${item._rowNumber}</div>
+              <div class="text-xs text-slate-500 mt-2">${isPhoneLikelyValid(item.kontak) ? 'Nomor peserta valid' : 'Nomor peserta perlu dicek'}</div>
             </td>
             <td class="px-8 py-6">
               <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full ${style.badge} text-xs font-black ring-1 whitespace-nowrap">
@@ -420,22 +946,23 @@
       el.tableBody.innerHTML = html;
       el.emptyState.classList.add('hidden');
       el.tableWrapper.classList.remove('hidden');
+      el.paginationBar.classList.remove('hidden');
     }
 
-    function scheduleRender() {
+    function scheduleRender(resetPage = true) {
       clearTimeout(state.searchTimer);
+      if (resetPage) state.page = 1;
       state.searchTimer = setTimeout(() => {
         window.requestAnimationFrame(renderTable);
       }, APP_CONFIG.searchDebounceMs);
     }
 
-    function buildPdfHtml(rows) {
+    function buildPdfHtml(rows, title = 'Pengumuman Resmi') {
       const generatedAt = new Date().toLocaleString('id-ID');
       const total = rows.length;
-      const lolos = rows.filter((item) => item.status === 'LOLOS').length;
+      const lolos = rows.filter(item => item.status === 'LOLOS').length;
       const tidakLolos = total - lolos;
-      const announcement = escapeHtml(el.announcementText.textContent);
-
+      const announcement = nl2brSafe(cleanText(el.announcementText.textContent));
       const rowHtml = rows.map((item, index) => `
         <tr>
           <td>${index + 1}</td>
@@ -443,7 +970,7 @@
           <td>${escapeHtml(maskPhone(item.kontak))}</td>
           <td>${escapeHtml(item.sekolah)}</td>
           <td>${escapeHtml(item.kelas)}</td>
-          <td>${escapeHtml(item.guru)}</td>
+          <td>${escapeHtml(maskPhoneInText(item.guru || '-'))}</td>
           <td>${escapeHtml(item.status)}</td>
         </tr>`).join('');
 
@@ -451,110 +978,161 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
-<title>Pengumuman Resmi</title>
+<title>${escapeHtml(title)}</title>
 <style>
-  body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 28px; }
-  h1 { font-size: 24px; margin: 0 0 8px; }
-  .meta { color: #475569; font-size: 12px; margin-bottom: 18px; }
-  .notice { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 16px; padding: 16px; margin-bottom: 18px; line-height: 1.6; }
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
-  .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; }
-  .label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .08em; }
-  .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  th, td { border: 1px solid #e2e8f0; padding: 8px; vertical-align: top; }
-  th { background: #f8fafc; text-align: left; }
-  @media print {
-    body { margin: 16px; }
-    .stats { grid-template-columns: repeat(4, 1fr); }
-    tr { page-break-inside: avoid; }
-  }
+body{font-family:Arial,Helvetica,sans-serif;color:#0f172a;margin:28px}
+h1{font-size:24px;margin:0 0 8px}
+.meta{color:#475569;font-size:12px;margin-bottom:18px}
+.notice{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:16px;padding:16px;margin-bottom:18px;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.card{border:1px solid #e2e8f0;border-radius:12px;padding:12px}
+.label{font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700;letter-spacing:.08em}
+.value{font-size:24px;font-weight:700;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border:1px solid #e2e8f0;padding:8px;vertical-align:top}
+th{background:#f8fafc;text-align:left}
 </style>
 </head>
 <body>
-  <h1>PENGUMUMAN SELEKSI PELATIHAN CONTENT CREATOR</h1>
+  <h1>${escapeHtml(title)}</h1>
   <div class="meta">Dicetak: ${generatedAt} • Total data: ${total}</div>
   <div class="notice"><strong>Pemberitahuan:</strong><br>${announcement}</div>
   <div class="stats">
     <div class="card"><div class="label">Total Peserta</div><div class="value">${total}</div></div>
     <div class="card"><div class="label">Lolos</div><div class="value">${lolos}</div></div>
     <div class="card"><div class="label">Tidak Lolos</div><div class="value">${tidakLolos}</div></div>
-    <div class="card"><div class="label">Total Sekolah</div><div class="value">${new Set(rows.map((item) => item.sekolah).filter(Boolean)).size}</div></div>
+    <div class="card"><div class="label">Total Sekolah</div><div class="value">${new Set(rows.map(item => item.sekolah).filter(Boolean)).size}</div></div>
   </div>
   <table>
-    <thead>
-      <tr>
-        <th>No</th>
-        <th>Nama</th>
-        <th>WhatsApp</th>
-        <th>Sekolah</th>
-        <th>Kelas</th>
-        <th>Guru</th>
-        <th>Status</th>
-      </tr>
-    </thead>
+    <thead><tr><th>No</th><th>Nama</th><th>WhatsApp</th><th>Sekolah</th><th>Kelas</th><th>Guru</th><th>Status</th></tr></thead>
     <tbody>${rowHtml}</tbody>
   </table>
 </body>
 </html>`;
     }
 
-    function exportPdf() {
-      if (!state.filteredParticipants.length) {
-        alert('Tidak ada data yang bisa diexport.');
-        return;
-      }
+    function exportPdf(mode = 'filtered') {
+      let rows = state.filteredParticipants;
+      let title = cleanText(el.mainTitle.textContent);
+      if (mode === 'all') rows = state.participants;
+      if (mode === 'lolos') rows = state.participants.filter(item => item.status === 'LOLOS');
+      if (!rows.length) return alert('Tidak ada data yang bisa diexport.');
 
       const printWindow = window.open('', '_blank', 'width=1200,height=900');
-      if (!printWindow) {
-        alert('Popup diblokir browser. Izinkan popup untuk export PDF.');
-        return;
-      }
-
+      if (!printWindow) return alert('Popup diblokir browser. Izinkan popup untuk export PDF.');
       printWindow.document.open();
-      printWindow.document.write(buildPdfHtml(state.filteredParticipants));
+      printWindow.document.write(buildPdfHtml(rows, title));
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => printWindow.print(), 500);
     }
 
-    async function loadSpreadsheetData() {
+    function exportCsv(mode = 'filtered') {
+      let rows = state.filteredParticipants;
+      if (mode === 'all') rows = state.participants;
+      if (mode === 'lolos') rows = state.participants.filter(item => item.status === 'LOLOS');
+      if (!rows.length) return alert('Tidak ada data yang bisa diexport.');
+
+      const csv = Papa.unparse(rows.map(item => ({
+        Row: item._rowNumber,
+        Nama: item.nama,
+        WhatsApp: maskPhone(item.kontak),
+        Sekolah: item.sekolah,
+        Kelas: item.kelas,
+        Guru: maskPhoneInText(item.guru || '-'),
+        Status: item.status,
+        Duplicate: state.duplicateKeys.has(duplicateKey(item)) ? 'YA' : 'TIDAK'
+      })));
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'hasil-filter-seleksi.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function runSelfCheck() {
+      const nameQuery = cleanText(el.selfCheckName.value);
+      const phoneQuery = normalizePhone(el.selfCheckPhone.value);
+
+      if (!nameQuery && !phoneQuery) {
+        el.selfCheckResult.classList.remove('hidden');
+        el.selfCheckResult.innerHTML = '<div class="text-rose-600 font-bold">Masukkan nama atau nomor WhatsApp terlebih dahulu.</div>';
+        return;
+      }
+
+      const matches = state.participants.filter(item => {
+        const nameOk = nameQuery ? similarity(item.nama, nameQuery) >= 0.65 || sanitizeForSearch(item.nama).includes(sanitizeForSearch(nameQuery)) : true;
+        const phoneOk = phoneQuery ? normalizePhone(item.kontak).includes(phoneQuery) : true;
+        return nameOk && phoneOk;
+      }).slice(0, 5);
+
+      el.selfCheckResult.classList.remove('hidden');
+      if (!matches.length) {
+        el.selfCheckResult.innerHTML = '<div class="text-slate-600 font-bold">Data tidak ditemukan.</div><div class="text-slate-500 mt-1">Coba cek ejaan nama atau nomor WhatsApp.</div>';
+        return;
+      }
+
+      el.selfCheckResult.innerHTML = matches.map(item => `
+        <div class="rounded-xl border border-slate-200 bg-white p-3 ${item.status === 'LOLOS' ? 'border-emerald-200' : 'border-amber-200'}">
+          <div class="font-extrabold text-slate-800">${escapeHtml(item.nama)}</div>
+          <div class="text-slate-500 text-sm mt-1">${escapeHtml(item.sekolah)} • Kelas ${escapeHtml(item.kelas)}</div>
+          <div class="text-slate-500 text-sm mt-1">WA: ${escapeHtml(maskPhone(item.kontak))}</div>
+          <div class="mt-2 inline-flex px-3 py-1 rounded-full ${item.status === 'LOLOS' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} font-black text-xs">${escapeHtml(item.status)}</div>
+        </div>
+      `).join('<div class="space-y-2"></div>');
+    }
+
+    async function loadSpreadsheetData(bypassCache = false) {
       setLoadingState(true);
       setError('');
       el.emptyState.classList.add('hidden');
       el.tableWrapper.classList.add('hidden');
 
       try {
-        const csvText = await fetchCsvText(participantCsvUrls);
+        const csvText = await fetchCsvText(participantCsvUrls, 'participants', bypassCache);
         const parsed = Papa.parse(csvText, {
           header: true,
           skipEmptyLines: 'greedy',
           dynamicTyping: false
         });
 
-        const mapped = (parsed.data || [])
+        state.rawRows = parsed.data || [];
+        const mapped = state.rawRows
           .slice(0, APP_CONFIG.maxRows)
           .map((row, index) => mapRow(row, index))
-          .filter(Boolean);
+          .filter(Boolean)
+          .filter(item => item.nama);
 
-        state.participants = mapped;
+        state.participants = mapped.map(item => ({ ...item, searchIndex: buildSearchIndex(item) }));
 
         if (!state.participants.length) {
           throw new Error('CSV berhasil diambil, tapi tidak ada baris valid yang bisa dibaca. Periksa nama header sheet.');
         }
 
-        state.lastLoadedAt = new Date();
-        updateStatusOptions();
-        renderTable();
+        buildDuplicates(state.participants);
+        buildAudit(state.rawRows, state.participants);
+        applyAuditToUi();
+        updateFilterOptions();
 
-        const loadedInfo = `${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.participants.length} peserta`;
-        const clippedInfo = parsed.data.length > APP_CONFIG.maxRows ? ` • dibatasi ${APP_CONFIG.maxRows} baris` : '';
-        el.lastUpdatedText.textContent = `Terakhir dimuat: ${loadedInfo}${clippedInfo}`;
+        const now = new Date();
+        const cacheAt = state.cacheMeta.at ? new Date(state.cacheMeta.at).toLocaleString('id-ID') : '-';
+        el.cacheIndicator.textContent = state.cacheMeta.source === 'cache'
+          ? `Cache: aktif (${cacheAt})`
+          : `Cache: jaringan (${cacheAt})`;
+
+        const clippedInfo = state.rawRows.length > APP_CONFIG.maxRows ? ` • dibatasi ${APP_CONFIG.maxRows} baris` : '';
+        el.lastUpdatedText.textContent = `Terakhir dimuat: ${now.toLocaleString('id-ID')} • ${state.participants.length} peserta${clippedInfo}`;
+
+        state.page = 1;
+        renderTable();
       } catch (error) {
         console.error(error);
+        state.rawRows = [];
         state.participants = [];
         state.filteredParticipants = [];
-        updateStatusOptions();
         updateStats([]);
         setError(`Gagal sinkron ke spreadsheet. Penyebab paling umum: spreadsheet belum public/publish, nama header berubah, atau ada baris rusak. Detail: ${error.message}`);
       } finally {
@@ -562,18 +1140,86 @@
       }
     }
 
+    function startAutoRefresh(ms) {
+      stopAutoRefresh();
+      state.autoRefreshEnabled = true;
+      el.toggleAutoRefreshButton.textContent = `Auto Refresh: ${(ms / 1000).toFixed(0)}d`;
+      state.autoRefreshTimer = setInterval(() => {
+        loadConfig(true);
+        loadSpreadsheetData(true);
+      }, ms);
+    }
+
+    function stopAutoRefresh() {
+      state.autoRefreshEnabled = false;
+      el.toggleAutoRefreshButton.textContent = 'Auto Refresh: Off';
+      if (state.autoRefreshTimer) clearInterval(state.autoRefreshTimer);
+      state.autoRefreshTimer = null;
+    }
+
     function attachEvents() {
-      el.searchInput.addEventListener('input', scheduleRender);
-      el.statusFilter.addEventListener('change', renderTable);
-      el.refreshButton.addEventListener('click', loadSpreadsheetData);
-      el.exportPdfButton.addEventListener('click', exportPdf);
+      el.searchInput.addEventListener('input', () => scheduleRender(true));
+      [el.statusFilter, el.schoolFilter, el.classFilter, el.teacherFilter, el.sortFilter, el.duplicatesOnlyToggle].forEach(target => {
+        target.addEventListener('change', () => scheduleRender(true));
+      });
+
+      el.pageSizeSelect.addEventListener('change', () => {
+        state.pageSize = Number(el.pageSizeSelect.value) || APP_CONFIG.defaultPageSize;
+        state.page = 1;
+        renderTable();
+      });
+
+      el.prevPageButton.addEventListener('click', () => {
+        if (state.page > 1) {
+          state.page--;
+          renderTable();
+        }
+      });
+
+      el.nextPageButton.addEventListener('click', () => {
+        state.page++;
+        renderTable();
+      });
+
+      el.refreshButton.addEventListener('click', async () => {
+        await loadConfig(true);
+        await loadSpreadsheetData(true);
+      });
+
+      el.exportPdfButton.addEventListener('click', () => {
+        const mode = prompt('Ketik mode export PDF: filtered / all / lolos', 'filtered');
+        if (mode) exportPdf(mode.trim().toLowerCase());
+      });
+
+      el.exportCsvButton.addEventListener('click', () => {
+        const mode = prompt('Ketik mode export CSV: filtered / all / lolos', 'filtered');
+        if (mode) exportCsv(mode.trim().toLowerCase());
+      });
+
+      el.togglePublicModeButton.addEventListener('click', () => {
+        state.publicOnlyLolos = !state.publicOnlyLolos;
+        el.togglePublicModeButton.textContent = `Mode Publik: ${state.publicOnlyLolos ? 'Hanya Lolos' : 'Semua'}`;
+        scheduleRender(true);
+      });
+
+      el.toggleAutoRefreshButton.addEventListener('click', () => {
+        if (state.autoRefreshEnabled) {
+          stopAutoRefresh();
+        } else {
+          startAutoRefresh(60 * 1000);
+        }
+      });
+
+      el.selfCheckButton.addEventListener('click', runSelfCheck);
+      el.selfCheckName.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSelfCheck(); });
+      el.selfCheckPhone.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSelfCheck(); });
     }
 
     async function init() {
-      updateStatusOptions();
+      el.pageSizeSelect.value = String(APP_CONFIG.defaultPageSize);
       attachEvents();
-      await loadAnnouncement();
-      await loadSpreadsheetData();
+      await loadConfig(false);
+      await loadSpreadsheetData(false);
     }
 
     init();
