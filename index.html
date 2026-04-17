@@ -17,109 +17,186 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root { color-scheme: light; }
+    html { scroll-behavior: smooth; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .fade-in { animation: fadeInUp 240ms ease-out; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
     @media print {
-      #refreshButton, #exportPdfButton, #auditButton, #selfCheckPanel { display: none !important; }
+      #adminTools, #selfCheckPanel, #mobileAdminToggle { display: none !important; }
       body { background: white !important; }
+      main { padding: 0 !important; }
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
-  <div class="max-w-7xl mx-auto px-4 pt-8 md:pt-12">
-    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
-      <div class="w-full lg:max-w-3xl">
-        <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm mb-4 text-xs font-bold tracking-[0.2em] uppercase text-emerald-600">
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+  <main class="max-w-6xl mx-auto px-4 py-6 sm:py-8 md:py-10">
+    <header class="mb-6 md:mb-8">
+      <div class="flex flex-col gap-4">
+        <div class="inline-flex w-fit items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm text-[11px] sm:text-xs font-bold tracking-[0.18em] uppercase text-emerald-600">
           <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
           Pengumuman Resmi
         </div>
 
-        <h1 class="text-2xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-          PENGUMUMAN SELEKSI PELATIHAN CONTENT CREATOR
-        </h1>
+        <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+          <section aria-labelledby="pageTitle" class="min-w-0">
+            <h1 id="pageTitle" class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Pengumuman Seleksi Pelatihan Content Creator
+            </h1>
 
-        <div class="flex flex-wrap items-center gap-3 mt-4 text-slate-500 font-medium">
-          <span class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Data sinkron
-          </span>
-          <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-          <span id="lastUpdatedText" class="text-slate-500">Memuat data terbaru...</span>
-        </div>
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 text-slate-500 font-medium">
+              <span class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100 text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Data sinkron
+              </span>
+              <span class="hidden sm:block w-1 h-1 bg-slate-300 rounded-full"></span>
+              <span id="lastUpdatedText" class="text-sm sm:text-base text-slate-500">Memuat data terbaru...</span>
+            </div>
 
-        <p id="cacheText" class="text-slate-400 mt-4">Memuat sumber data...</p>
-      </div>
+            <p id="cacheText" class="text-sm text-slate-400 mt-3">Memuat sumber data...</p>
+          </section>
 
-      <div class="bg-emerald-600 text-white p-5 rounded-3xl shadow-xl shadow-emerald-100 flex items-start gap-4 w-full lg:max-w-xl border-b-4 border-emerald-700">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 shrink-0 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div>
-          <h3 class="font-bold text-lg mb-2 italic">Pemberitahuan</h3>
-          <p id="announcementText" class="text-emerald-50 text-base leading-relaxed">
-            Memuat pengumuman...
-          </p>
+          <aside class="bg-emerald-600 text-white p-5 sm:p-6 rounded-[1.75rem] shadow-xl shadow-emerald-100 flex items-start gap-4 border-b-4 border-emerald-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 shrink-0 text-emerald-200 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div class="min-w-0">
+              <h2 class="font-bold text-lg mb-2">Pemberitahuan</h2>
+              <p id="announcementText" class="text-emerald-50 text-sm sm:text-base leading-relaxed">
+                Memuat pengumuman...
+              </p>
+            </div>
+          </aside>
         </div>
       </div>
     </header>
 
-    <section id="selfCheckPanel" class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 md:p-6">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 class="font-extrabold text-slate-900 text-xl md:text-2xl">Cek Status Mandiri</h2>
-          <p class="text-sm md:text-base text-slate-500 mt-1">Masukkan nama peserta atau nomor WhatsApp untuk melihat hasil seleksi dengan cepat.</p>
+    <section id="selfCheckPanel" class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 md:p-6">
+      <div class="flex flex-col gap-3 md:gap-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div class="max-w-2xl">
+            <h2 class="font-extrabold text-slate-900 text-xl sm:text-2xl md:text-3xl">Cek Status Mandiri</h2>
+            <p class="text-sm sm:text-base text-slate-500 mt-1.5">
+              Masukkan nama peserta atau nomor WhatsApp untuk melihat hasil seleksi dengan cepat.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 md:hidden">
+            <button id="mobileAdminToggle" type="button" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm">
+              <span>Alat Tambahan</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform" id="mobileAdminToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
-            Muat Ulang Data
-          </button>
-          <button id="exportPdfButton" class="px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-all shadow-sm">
-            Export PDF
-          </button>
-          <a id="auditButton" href="./audit_data.html" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm text-center">
-            Audit Data
-          </a>
+        <form id="selfCheckForm" class="mt-1" novalidate>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label for="selfCheckName" class="block text-sm font-bold text-slate-700 mb-2">Nama Peserta</label>
+              <input
+                id="selfCheckName"
+                name="name"
+                type="text"
+                placeholder="Contoh: Siti Aminah"
+                autocomplete="name"
+                class="w-full px-4 py-4 text-base bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition"
+              />
+            </div>
+
+            <div>
+              <label for="selfCheckPhone" class="block text-sm font-bold text-slate-700 mb-2">Nomor WhatsApp</label>
+              <input
+                id="selfCheckPhone"
+                name="phone"
+                type="tel"
+                inputmode="numeric"
+                autocomplete="tel"
+                placeholder="Contoh: 08123456789"
+                class="w-full px-4 py-4 text-base bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition"
+              />
+            </div>
+          </div>
+
+          <div class="mt-3 sm:mt-4">
+            <button
+              id="selfCheckButton"
+              type="submit"
+              class="w-full sm:w-auto min-w-[220px] px-6 py-4 text-base rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+            >
+              Cek Hasil Sekarang
+            </button>
+          </div>
+
+          <p class="text-xs sm:text-sm text-slate-400 mt-3">
+            Isi salah satu kolom atau keduanya. Gunakan nama lengkap sesuai data pendaftaran.
+          </p>
+        </form>
+
+        <section
+          id="adminTools"
+          class="hidden md:block mt-2 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-3 sm:p-4"
+          aria-labelledby="adminToolsTitle"
+        >
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 id="adminToolsTitle" class="text-sm font-extrabold uppercase tracking-[0.14em] text-slate-500">Alat Tambahan</h3>
+              <p class="text-sm text-slate-500 mt-1">Gunakan hanya bila perlu untuk pengelolaan data.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+              <button id="refreshButton" type="button" class="px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all shadow-sm">
+                Muat Ulang Data
+              </button>
+              <button id="exportPdfButton" type="button" class="px-4 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-all shadow-sm">
+                Unduh PDF
+              </button>
+              <a id="auditButton" href="./audit_data.html" class="px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all shadow-sm text-center">
+                Audit Data
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <div id="loadingState" class="hidden mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-sm sm:text-base text-slate-500" aria-live="polite">
+          Memuat data dari spreadsheet...
         </div>
-      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
-        <input id="selfCheckName" type="text" placeholder="Masukkan nama peserta" class="w-full px-4 py-4 text-base md:text-lg bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
-        <input id="selfCheckPhone" type="text" placeholder="Atau masukkan nomor WhatsApp" class="w-full px-4 py-4 text-base md:text-lg bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
-        <button id="selfCheckButton" class="w-full px-4 py-4 text-base md:text-lg rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">
-          Cek Sekarang
-        </button>
-      </div>
-
-      <div id="loadingState" class="hidden mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-slate-500">
-        Memuat data dari spreadsheet...
-      </div>
-
-      <div id="selfCheckEmpty" class="hidden mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm md:text-base text-amber-700 font-medium text-center fade-in">
-        <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-2xl mb-3">⚠️</div>
-        <div id="selfCheckEmptyText">Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.</div>
-      </div>
-
-      <div id="selfCheckResult" class="hidden mt-5">
-        <div id="selfCheckCard" class="rounded-[2rem] border p-6 md:p-8 shadow-lg text-center">
-          <p class="text-xs md:text-sm font-black tracking-[0.25em] uppercase text-slate-400">Hasil Seleksi</p>
-          <h3 id="selfCheckResultName" class="mt-3 text-2xl md:text-3xl font-black text-slate-900"></h3>
-          <p id="selfCheckResultSchool" class="mt-2 text-sm md:text-base text-slate-500"></p>
-          <div id="selfCheckResultStatus" class="mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black"></div>
-          <p id="selfCheckResultNote" class="mt-4 text-sm md:text-base text-slate-600 max-w-2xl mx-auto"></p>
+        <div id="selfCheckEmpty" class="hidden mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm md:text-base text-amber-700 font-medium text-center fade-in" role="alert">
+          <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-2xl mb-3" aria-hidden="true">⚠️</div>
+          <div id="selfCheckEmptyText">Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.</div>
         </div>
+
+        <section id="selfCheckResult" class="hidden mt-5" aria-live="polite">
+          <div id="selfCheckCard" class="rounded-[2rem] border p-5 sm:p-6 md:p-8 shadow-lg text-center">
+            <p class="text-xs md:text-sm font-black tracking-[0.25em] uppercase text-slate-400">Hasil Seleksi</p>
+            <div id="selfCheckResultIcon" class="mt-4 text-4xl" aria-hidden="true">📄</div>
+            <h3 id="selfCheckResultName" class="mt-3 text-2xl md:text-3xl font-black text-slate-900"></h3>
+            <p id="selfCheckResultSchool" class="mt-2 text-sm md:text-base text-slate-500"></p>
+            <div id="selfCheckResultStatus" class="mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black"></div>
+            <p id="selfCheckResultNote" class="mt-4 text-sm md:text-base text-slate-600 max-w-2xl mx-auto"></p>
+          </div>
+        </section>
       </div>
     </section>
 
-    <div class="mt-10 text-center">
-      <p class="text-sm text-slate-400">By Duta Teladan Universitas STEKOM</p>
-    </div>
-  </div>
+    <footer class="mt-8 md:mt-10 text-center">
+      <p class="text-sm text-slate-400">Dibuat oleh Duta Teladan Universitas STEKOM</p>
+    </footer>
+  </main>
 
   <script>
     const APP_CONFIG = {
@@ -134,7 +211,9 @@
     const state = {
       participants: [],
       lastLoadedAt: null,
-      cacheSource: 'jaringan'
+      cacheSource: 'jaringan',
+      isChecking: false,
+      mobileToolsOpen: false
     };
 
     const el = {
@@ -143,6 +222,10 @@
       announcementText: document.getElementById('announcementText'),
       refreshButton: document.getElementById('refreshButton'),
       exportPdfButton: document.getElementById('exportPdfButton'),
+      mobileAdminToggle: document.getElementById('mobileAdminToggle'),
+      mobileAdminToggleIcon: document.getElementById('mobileAdminToggleIcon'),
+      adminTools: document.getElementById('adminTools'),
+      selfCheckForm: document.getElementById('selfCheckForm'),
       selfCheckName: document.getElementById('selfCheckName'),
       selfCheckPhone: document.getElementById('selfCheckPhone'),
       selfCheckButton: document.getElementById('selfCheckButton'),
@@ -150,6 +233,7 @@
       selfCheckEmptyText: document.getElementById('selfCheckEmptyText'),
       selfCheckResult: document.getElementById('selfCheckResult'),
       selfCheckCard: document.getElementById('selfCheckCard'),
+      selfCheckResultIcon: document.getElementById('selfCheckResultIcon'),
       selfCheckResultName: document.getElementById('selfCheckResultName'),
       selfCheckResultSchool: document.getElementById('selfCheckResultSchool'),
       selfCheckResultStatus: document.getElementById('selfCheckResultStatus'),
@@ -165,8 +249,8 @@
     function cleanText(value) {
       return (value ?? '')
         .toString()
-        .replace(/[\u200B-\u200D\uFEFF]/g, '')
-        .replace(/\s+/g, ' ')
+        .replace(/[\\u200B-\\u200D\\uFEFF]/g, '')
+        .replace(/\\s+/g, ' ')
         .trim();
     }
 
@@ -175,7 +259,7 @@
     }
 
     function normalizePhone(value) {
-      const digits = cleanText(value).replace(/\D/g, '');
+      const digits = cleanText(value).replace(/\\D/g, '');
       if (!digits) return '';
       if (digits.startsWith('62')) return '0' + digits.slice(2);
       return digits;
@@ -265,6 +349,12 @@
       el.refreshButton.classList.toggle('cursor-not-allowed', isLoading);
     }
 
+    function setCheckingState(isChecking) {
+      state.isChecking = isChecking;
+      el.selfCheckButton.disabled = isChecking;
+      el.selfCheckButton.textContent = isChecking ? 'Mengecek...' : 'Cek Hasil Sekarang';
+    }
+
     async function loadConfig() {
       el.announcementText.textContent = APP_CONFIG.defaultAnnouncement;
 
@@ -332,10 +422,39 @@
       }
 
       el.lastUpdatedText.textContent = `Terakhir dimuat: ${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.participants.length} peserta`;
-      el.cacheText.textContent = `Cache: ${state.cacheSource} (${state.lastLoadedAt.toLocaleString('id-ID')})`;
+      el.cacheText.textContent = `Sumber data: ${state.cacheSource} (${state.lastLoadedAt.toLocaleString('id-ID')})`;
     }
 
-    function runSelfCheck() {
+    function showMessage(text) {
+      el.selfCheckResult.classList.add('hidden');
+      el.selfCheckEmptyText.textContent = text;
+      el.selfCheckEmpty.classList.remove('hidden');
+    }
+
+    function showResult(match) {
+      el.selfCheckEmpty.classList.add('hidden');
+
+      el.selfCheckResultName.textContent = match.nama || '-';
+      el.selfCheckResultSchool.textContent = `${match.sekolah || '-'} • Kelas ${match.kelas || '-'}`;
+
+      if (match.status === 'LOLOS') {
+        el.selfCheckCard.className = 'rounded-[2rem] border border-emerald-200 bg-emerald-50 p-5 sm:p-6 md:p-8 shadow-lg text-center fade-in';
+        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-emerald-600 text-white';
+        el.selfCheckResultIcon.textContent = '✅';
+        el.selfCheckResultStatus.textContent = 'LOLOS';
+        el.selfCheckResultNote.textContent = `WA: ${maskPhone(match.kontak)} • Selamat, Anda dinyatakan lolos seleksi. Silakan pantau informasi lanjutan dari panitia.`;
+      } else {
+        el.selfCheckCard.className = 'rounded-[2rem] border border-amber-200 bg-amber-50 p-5 sm:p-6 md:p-8 shadow-lg text-center fade-in';
+        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-amber-500 text-white';
+        el.selfCheckResultIcon.textContent = '🙂';
+        el.selfCheckResultStatus.textContent = 'TIDAK LOLOS';
+        el.selfCheckResultNote.textContent = `WA: ${maskPhone(match.kontak)} • Terima kasih sudah berpartisipasi. Tetap semangat untuk kesempatan berikutnya.`;
+      }
+
+      el.selfCheckResult.classList.remove('hidden');
+    }
+
+    async function runSelfCheck() {
       const nameQuery = cleanText(el.selfCheckName.value).toLowerCase();
       const phoneQuery = normalizePhone(el.selfCheckPhone.value);
 
@@ -343,43 +462,32 @@
       el.selfCheckResult.classList.add('hidden');
 
       if (!nameQuery && !phoneQuery) {
-        el.selfCheckEmptyText.textContent = 'Masukkan nama peserta atau nomor WhatsApp terlebih dahulu.';
-        el.selfCheckEmpty.classList.remove('hidden');
+        showMessage('Masukkan nama peserta atau nomor WhatsApp terlebih dahulu.');
         return;
       }
 
-      let match = null;
+      setCheckingState(true);
 
-      if (phoneQuery) {
-        match = state.participants.find(item => normalizePhone(item.kontak) === phoneQuery);
+      try {
+        let match = null;
+
+        if (phoneQuery) {
+          match = state.participants.find(item => normalizePhone(item.kontak) === phoneQuery);
+        }
+
+        if (!match && nameQuery) {
+          match = state.participants.find(item => cleanText(item.nama).toLowerCase() === nameQuery);
+        }
+
+        if (!match) {
+          showMessage('Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.');
+          return;
+        }
+
+        showResult(match);
+      } finally {
+        setCheckingState(false);
       }
-
-      if (!match && nameQuery) {
-        match = state.participants.find(item => cleanText(item.nama).toLowerCase() === nameQuery);
-      }
-
-      if (!match) {
-        el.selfCheckEmptyText.textContent = 'Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.';
-        el.selfCheckEmpty.classList.remove('hidden');
-        return;
-      }
-
-      el.selfCheckResultName.textContent = match.nama || '-';
-      el.selfCheckResultSchool.textContent = `${match.sekolah || '-'} • Kelas ${match.kelas || '-'}`;
-
-      if (match.status === 'LOLOS') {
-        el.selfCheckCard.className = 'rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 md:p-8 shadow-lg text-center fade-in';
-        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-emerald-600 text-white';
-        el.selfCheckResultStatus.textContent = 'LOLOS';
-        el.selfCheckResultNote.textContent = `WA: ${maskPhone(match.kontak)} • Selamat, kamu dinyatakan lolos seleksi.`;
-      } else {
-        el.selfCheckCard.className = 'rounded-[2rem] border border-amber-200 bg-amber-50 p-6 md:p-8 shadow-lg text-center fade-in';
-        el.selfCheckResultStatus.className = 'mt-5 inline-flex items-center justify-center px-6 py-3 rounded-full text-sm md:text-base font-black bg-amber-500 text-white';
-        el.selfCheckResultStatus.textContent = 'TIDAK LOLOS';
-        el.selfCheckResultNote.textContent = `WA: ${maskPhone(match.kontak)} • Terima kasih sudah berpartisipasi.`;
-      }
-
-      el.selfCheckResult.classList.remove('hidden');
     }
 
     function buildPdfHtml(rows) {
@@ -419,7 +527,7 @@
 </style>
 </head>
 <body>
-  <h1>PENGUMUMAN SELEKSI PELATIHAN CONTENT CREATOR</h1>
+  <h1>Pengumuman Seleksi Pelatihan Content Creator</h1>
   <div class="meta">Dicetak: ${generatedAt}</div>
   <div class="notice"><strong>Pemberitahuan:</strong><br>${announcement}</div>
   <div class="stats">
@@ -452,7 +560,7 @@
 
       const printWindow = window.open('', '_blank', 'width=1200,height=900');
       if (!printWindow) {
-        alert('Popup diblokir browser. Izinkan popup untuk export PDF.');
+        alert('Popup diblokir browser. Izinkan popup untuk unduh PDF.');
         return;
       }
 
@@ -461,6 +569,17 @@
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => printWindow.print(), 500);
+    }
+
+    function updateMobileTools() {
+      if (window.innerWidth >= 768) {
+        el.adminTools.classList.remove('hidden');
+        el.mobileAdminToggleIcon.style.transform = 'rotate(0deg)';
+        return;
+      }
+
+      el.adminTools.classList.toggle('hidden', !state.mobileToolsOpen);
+      el.mobileAdminToggleIcon.style.transform = state.mobileToolsOpen ? 'rotate(180deg)' : 'rotate(0deg)';
     }
 
     async function loadSpreadsheetData(forceRefresh = false) {
@@ -508,13 +627,23 @@
     function attachEvents() {
       el.refreshButton.addEventListener('click', () => loadSpreadsheetData(true));
       el.exportPdfButton.addEventListener('click', exportPdf);
-      el.selfCheckButton.addEventListener('click', runSelfCheck);
-      el.selfCheckName.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSelfCheck(); });
-      el.selfCheckPhone.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSelfCheck(); });
+
+      el.selfCheckForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await runSelfCheck();
+      });
+
+      el.mobileAdminToggle.addEventListener('click', () => {
+        state.mobileToolsOpen = !state.mobileToolsOpen;
+        updateMobileTools();
+      });
+
+      window.addEventListener('resize', updateMobileTools);
     }
 
     async function init() {
       attachEvents();
+      updateMobileTools();
       await loadConfig();
       await loadSpreadsheetData(false);
     }
