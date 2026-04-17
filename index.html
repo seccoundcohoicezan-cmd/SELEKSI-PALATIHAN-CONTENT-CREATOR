@@ -20,7 +20,15 @@
       }
       body { background: white !important; }
     }
-  </style>
+  
+    .fade-in {
+      animation: fadeInUp 240ms ease-out;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 
   <meta name="description" content="Cek hasil seleksi pelatihan content creator secara online.">
 
@@ -115,9 +123,7 @@
       <button id="selfCheckButton" class="w-full px-4 py-4 text-base md:text-lg rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">Cek Sekarang</button>
     </div>
 
-    <div id="selfCheckEmpty" class="hidden mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm md:text-base text-amber-700 font-medium">
-      Data tidak ditemukan. Periksa kembali nama atau nomor WhatsApp yang dimasukkan.
-    </div>
+    <div id="selfCheckEmpty" class="hidden mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm md:text-base text-amber-700 font-medium text-center fade-in"><div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-2xl mb-3">⚠️</div><div id="selfCheckEmptyText">Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.</div></div>
 
     <div id="selfCheckResult" class="hidden mt-5">
       <div id="selfCheckCard" class="rounded-[2rem] border p-6 md:p-8 shadow-lg text-center">
@@ -321,6 +327,7 @@
       selfCheckButton: document.getElementById('selfCheckButton'),
       selfCheckResult: document.getElementById('selfCheckResult'),
       selfCheckEmpty: document.getElementById('selfCheckEmpty'),
+      selfCheckEmptyText: document.getElementById('selfCheckEmptyText'),
       selfCheckCard: document.getElementById('selfCheckCard'),
       selfCheckResultName: document.getElementById('selfCheckResultName'),
       selfCheckResultSchool: document.getElementById('selfCheckResultSchool'),
@@ -942,6 +949,14 @@ h1{font-size:24px;margin:0 0 8px}
 table{width:100%;border-collapse:collapse;font-size:11px}
 th,td{border:1px solid #e2e8f0;padding:8px;vertical-align:top}
 th{background:#f8fafc;text-align:left}
+
+    .fade-in {
+      animation: fadeInUp 240ms ease-out;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 
   <meta name="description" content="Cek hasil seleksi pelatihan content creator secara online.">
@@ -1023,7 +1038,7 @@ th{background:#f8fafc;text-align:left}
       el.selfCheckResult.classList.add('hidden');
 
       if (!nameQuery && !phoneQuery) {
-        el.selfCheckEmpty.textContent = 'Masukkan nama peserta atau nomor WhatsApp terlebih dahulu.';
+        el.selfCheckEmptyText.textContent = 'Masukkan nama peserta atau nomor WhatsApp terlebih dahulu.';
         el.selfCheckEmpty.classList.remove('hidden');
         return;
       }
@@ -1039,7 +1054,7 @@ th{background:#f8fafc;text-align:left}
       }
 
       if (!match) {
-        el.selfCheckEmpty.textContent = 'Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.';
+        el.selfCheckEmptyText.textContent = 'Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.';
         el.selfCheckEmpty.classList.remove('hidden');
         return;
       }
