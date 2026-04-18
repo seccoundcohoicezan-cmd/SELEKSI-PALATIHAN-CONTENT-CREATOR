@@ -7,7 +7,6 @@
   <meta name="description" content="Cek hasil seleksi pelatihan content creator secara online." />
   <meta property="og:title" content="Pengumuman Seleksi Pelatihan Content Creator" />
   <meta property="og:description" content="Cek hasil seleksi pelatihan content creator secara online." />
-  <meta property="og:url" content="https://seleksi-palatihan-content-creator.vercel.app/" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Pengumuman Seleksi Pelatihan Content Creator" />
@@ -19,164 +18,130 @@
     :root { color-scheme: light; }
     html { scroll-behavior: smooth; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-    .fade-in { animation: fadeInUp 240ms ease-out; }
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
+    .fade-in { animation: fadeInUp 220ms ease-out; }
     @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(6px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
     @media print {
-      #adminTools, #selfCheckPanel, #mobileAdminToggle { display: none !important; }
+      #adminBar, #selfCheckPanel button, #refreshButton, #exportPdfButton, #auditButton { display: none !important; }
       body { background: white !important; }
       main { padding: 0 !important; }
+    }
+    @media (max-width: 640px) {
+      main { padding-left: 14px !important; padding-right: 14px !important; }
+      #selfCheckCard { border-radius: 1.5rem !important; }
+      #selfCheckResultName { font-size: 1.8rem !important; }
+      #selfCheckResultSchool { font-size: 0.95rem !important; }
     }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
   <main class="max-w-6xl mx-auto px-4 py-6 sm:py-8 md:py-10">
-    <header class="mb-6 md:mb-8">
-      <div class="flex flex-col gap-4">
-        <div class="inline-flex w-fit items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm text-[11px] sm:text-xs font-bold tracking-[0.18em] uppercase text-emerald-600">
-          <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-          Pengumuman Resmi
-        </div>
+    <header class="mb-8">
+      <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm text-[11px] sm:text-xs font-bold tracking-[0.18em] uppercase text-emerald-600">
+        <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+        Pengumuman Resmi
+      </div>
 
-        <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
-          <section aria-labelledby="pageTitle" class="min-w-0">
-            <h1 id="pageTitle" class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Pengumuman Seleksi Pelatihan Content Creator
-            </h1>
+      <div class="grid gap-4 lg:grid-cols-[1.15fr_0.85fr] mt-4">
+        <section>
+          <h1 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            Pengumuman Seleksi Pelatihan Content Creator
+          </h1>
+          <p class="text-slate-500 mt-4 max-w-3xl leading-relaxed">
+            Halaman ini menampilkan <strong>data final</strong> yang sudah melalui cleaning otomatis dan dedup, sinkron dengan halaman audit admin.
+          </p>
+          <div class="flex flex-wrap gap-2 sm:gap-3 mt-4 text-slate-500 font-medium">
+            <span class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100 text-sm">
+              <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+              Data sinkron
+            </span>
+            <span id="lastUpdatedText" class="text-sm sm:text-base text-slate-500">Memuat data terbaru...</span>
+          </div>
+          <p id="cacheText" class="text-sm text-slate-400 mt-3">Memuat sumber data...</p>
+        </section>
 
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 text-slate-500 font-medium">
-              <span class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100 text-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Data sinkron
-              </span>
-              <span class="hidden sm:block w-1 h-1 bg-slate-300 rounded-full"></span>
-              <span id="lastUpdatedText" class="text-sm sm:text-base text-slate-500">Memuat data terbaru...</span>
-            </div>
-
-            <p id="cacheText" class="text-sm text-slate-400 mt-3">Memuat sumber data...</p>
-          </section>
-
-          <aside class="bg-emerald-600 text-white p-5 sm:p-6 rounded-[1.75rem] shadow-xl shadow-emerald-100 flex items-start gap-4 border-b-4 border-emerald-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 shrink-0 text-emerald-200 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <div class="min-w-0">
-              <h2 class="font-bold text-lg mb-2">Pemberitahuan</h2>
-              <p id="announcementText" class="text-emerald-50 text-sm sm:text-base leading-relaxed">
-                Memuat pengumuman...
-              </p>
-            </div>
-          </aside>
-        </div>
+        <aside class="bg-emerald-600 text-white p-5 sm:p-6 rounded-[1.75rem] shadow-xl shadow-emerald-100 border-b-4 border-emerald-700">
+          <h2 class="font-bold text-lg mb-2">Pemberitahuan</h2>
+          <p id="announcementText" class="text-emerald-50 text-sm sm:text-base leading-relaxed">
+            Memuat pengumuman...
+          </p>
+        </aside>
       </div>
     </header>
 
-    <section id="selfCheckPanel" class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 md:p-6">
-      <div class="flex flex-col gap-3 md:gap-4">
-        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <div class="max-w-2xl">
-            <h2 class="font-extrabold text-slate-900 text-xl sm:text-2xl md:text-3xl">Cek Status Mandiri</h2>
-            <p class="text-sm sm:text-base text-slate-500 mt-1.5">
-              Masukkan nama peserta atau nomor WhatsApp untuk melihat hasil seleksi dengan cepat.
-            </p>
-          </div>
-
-          <div class="flex items-center gap-2 md:hidden">
-            <button id="mobileAdminToggle" type="button" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm">
-              <span>Alat Tambahan</span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform" id="mobileAdminToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <form id="selfCheckForm" class="mt-1" novalidate>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label for="selfCheckName" class="block text-sm font-bold text-slate-700 mb-2">Nama Peserta</label>
-              <input id="selfCheckName" name="name" type="text" placeholder="Contoh: Siti Aminah" autocomplete="name" class="w-full px-4 py-4 text-base bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition" />
-            </div>
-
-            <div>
-              <label for="selfCheckPhone" class="block text-sm font-bold text-slate-700 mb-2">Nomor WhatsApp</label>
-              <input id="selfCheckPhone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="Contoh: 08123456789" class="w-full px-4 py-4 text-base bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition" />
-            </div>
-          </div>
-
-          <div class="mt-3 sm:mt-4">
-            <button id="selfCheckButton" type="submit" class="w-full sm:w-auto min-w-[220px] px-6 py-4 text-base rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed shadow-sm">
-              Cek Hasil Sekarang
-            </button>
-          </div>
-
-          <p class="text-xs sm:text-sm text-slate-400 mt-3">
-            Isi salah satu kolom atau keduanya. Gunakan nama lengkap sesuai data pendaftaran.
+    <section id="selfCheckPanel" class="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-6 md:p-7">
+      <div class="flex flex-col gap-4 mb-4 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl">
+          <h2 class="font-extrabold text-slate-900 text-2xl md:text-3xl">Cek Status Mandiri</h2>
+          <p class="text-sm sm:text-base text-slate-500 mt-1.5 leading-relaxed">
+            Masukkan nama peserta atau nomor WhatsApp untuk melihat hasil seleksi dengan cepat.
           </p>
-        </form>
-
-        <div id="loadingState" class="hidden mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-sm sm:text-base text-slate-500" aria-live="polite">
-          Memuat data dari spreadsheet...
         </div>
-
-        <div id="selfCheckEmpty" class="hidden mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm md:text-base text-amber-700 font-medium text-center fade-in" role="alert">
-          <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-2xl mb-3" aria-hidden="true">⚠️</div>
-          <div id="selfCheckEmptyText">Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.</div>
+        <div id="adminBar" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <button id="refreshButton" type="button" class="w-full sm:w-auto px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition shadow-sm">
+            Muat Ulang
+          </button>
+          <button id="exportPdfButton" type="button" class="w-full sm:w-auto px-4 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition shadow-sm">
+            Unduh PDF Ringkas
+          </button>
+          <a id="auditButton" href="./audit_data_synced.html" class="w-full sm:w-auto px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition shadow-sm text-center">
+            Audit Data
+          </a>
         </div>
-
-        <section id="selfCheckResult" class="hidden mt-6" aria-live="polite">
-          <div id="selfCheckCard" class="rounded-[2rem] border p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.22)] fade-in">
-            <div class="mx-auto max-w-3xl text-center">
-              <p class="text-[11px] sm:text-xs font-extrabold tracking-[0.34em] uppercase text-slate-400">Hasil Seleksi</p>
-              <h3 id="selfCheckResultName" class="mt-5 text-[1.85rem] sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-[1.05] break-words"></h3>
-              <div class="mt-5 flex justify-center">
-                <div class="inline-flex max-w-full items-center rounded-full border border-white/80 bg-white/85 px-4 py-3 shadow-sm backdrop-blur-sm">
-                  <p id="selfCheckResultSchool" class="text-sm sm:text-base md:text-lg font-bold text-slate-700 break-words"></p>
-                </div>
-              </div>
-              <div class="mt-5 flex justify-center">
-                <div id="selfCheckResultStatusWrap" class="inline-flex items-center rounded-full px-4 sm:px-5 py-3 shadow-sm ring-1 backdrop-blur-sm">
-                  <p id="selfCheckResultStatus" class="text-sm sm:text-base font-extrabold tracking-[0.08em] uppercase"></p>
-                </div>
-              </div>
-              <p id="selfCheckResultFooter" class="mt-5 text-xs sm:text-sm text-slate-500 font-medium">Peserta terverifikasi</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="adminTools" class="hidden md:block mt-2 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-3 sm:p-4" aria-labelledby="adminToolsTitle">
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 id="adminToolsTitle" class="text-sm font-extrabold uppercase tracking-[0.14em] text-slate-500">Alat Tambahan</h3>
-              <p class="text-sm text-slate-500 mt-1">Gunakan hanya bila perlu untuk pengelolaan data.</p>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-              <button id="refreshButton" type="button" class="px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all shadow-sm">
-                Muat Ulang Data
-              </button>
-              <button id="exportPdfButton" type="button" class="px-4 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-all shadow-sm">
-                Unduh PDF
-              </button>
-              <a id="auditButton" href="./audit_data.html" class="px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all shadow-sm text-center">
-                Audit Data
-              </a>
-            </div>
-          </div>
-        </section>
       </div>
+
+      <form id="selfCheckForm" novalidate>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label for="selfCheckName" class="block text-sm font-bold text-slate-700 mb-2">Nama Peserta</label>
+            <input id="selfCheckName" name="name" type="text" placeholder="Contoh: Siti Aminah" autocomplete="name" class="w-full px-4 py-4 text-base bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition" />
+          </div>
+          <div>
+            <label for="selfCheckPhone" class="block text-sm font-bold text-slate-700 mb-2">Nomor WhatsApp</label>
+            <input id="selfCheckPhone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="Contoh: 08123456789" class="w-full px-4 py-4 text-base bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition" />
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button id="selfCheckButton" type="submit" class="w-full sm:w-auto min-w-[220px] px-6 py-4 text-base rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed shadow-sm">
+            Cek Hasil Sekarang
+          </button>
+        </div>
+
+        <p class="text-xs sm:text-sm text-slate-400 mt-3">
+          Isi salah satu kolom atau keduanya. Gunakan nama lengkap sesuai data pendaftaran.
+        </p>
+      </form>
+
+      <div id="loadingState" class="hidden mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-sm sm:text-base text-slate-500" aria-live="polite">
+        Memuat data sinkron dari spreadsheet...
+      </div>
+
+      <div id="selfCheckEmpty" class="hidden mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm md:text-base text-amber-700 font-medium text-center fade-in" role="alert">
+        <div id="selfCheckEmptyText">Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.</div>
+      </div>
+
+      <section id="selfCheckResult" class="hidden mt-6" aria-live="polite">
+        <div id="selfCheckCard" class="rounded-[2rem] border p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.22)] fade-in">
+          <div class="mx-auto max-w-3xl text-center">
+            <p class="text-[11px] sm:text-xs font-extrabold tracking-[0.34em] uppercase text-slate-400">Hasil Seleksi</p>
+            <h3 id="selfCheckResultName" class="mt-5 text-[1.85rem] sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-[1.05] break-words"></h3>
+            <div class="mt-5 flex justify-center">
+              <div class="inline-flex max-w-full items-center rounded-full border border-white/80 bg-white/85 px-4 py-3 shadow-sm backdrop-blur-sm">
+                <p id="selfCheckResultSchool" class="text-sm sm:text-base md:text-lg font-bold text-slate-700 break-words"></p>
+              </div>
+            </div>
+            <div class="mt-5 flex justify-center">
+              <div id="selfCheckResultStatusWrap" class="inline-flex items-center rounded-full px-4 sm:px-5 py-3 shadow-sm ring-1 backdrop-blur-sm">
+                <p id="selfCheckResultStatus" class="text-sm sm:text-base font-extrabold tracking-[0.08em] uppercase"></p>
+              </div>
+            </div>
+            <p id="selfCheckResultFooter" class="mt-5 text-xs sm:text-sm text-slate-500 font-medium">Sumber: data final sinkron hasil cleaning + dedup</p>
+          </div>
+        </div>
+      </section>
     </section>
 
     <footer class="mt-8 md:mt-10 text-center">
@@ -204,15 +169,16 @@
     };
 
     const state = {
-      allRows: [],
-      publicRows: [],
+      rawRows: [],
+      processedRows: [],
+      finalRows: [],
+      stats: null,
       headers: [],
       fields: {},
       lastLoadedAt: null,
       cacheSource: 'jaringan',
       isChecking: false,
-      isLoading: false,
-      mobileToolsOpen: false
+      isLoading: false
     };
 
     const el = {
@@ -221,9 +187,6 @@
       announcementText: document.getElementById('announcementText'),
       refreshButton: document.getElementById('refreshButton'),
       exportPdfButton: document.getElementById('exportPdfButton'),
-      mobileAdminToggle: document.getElementById('mobileAdminToggle'),
-      mobileAdminToggleIcon: document.getElementById('mobileAdminToggleIcon'),
-      adminTools: document.getElementById('adminTools'),
       selfCheckForm: document.getElementById('selfCheckForm'),
       selfCheckName: document.getElementById('selfCheckName'),
       selfCheckPhone: document.getElementById('selfCheckPhone'),
@@ -236,7 +199,7 @@
       selfCheckResultSchool: document.getElementById('selfCheckResultSchool'),
       selfCheckResultStatusWrap: document.getElementById('selfCheckResultStatusWrap'),
       selfCheckResultStatus: document.getElementById('selfCheckResultStatus'),
-      loadingState: document.getElementById('loadingState')
+      loadingState: document.getElementById('loadingState'),
     };
 
     const participantCsvUrls = [
@@ -245,17 +208,20 @@
     ];
 
     function cleanText(value) {
-      return (value ?? '')
-        .toString()
-        .replace(/[\u200B-\u200D\uFEFF]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      return (value ?? '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
     }
 
     function normalizeHeader(value) {
+      return cleanText(value).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+
+    function normalizeKey(value) {
       return cleanText(value)
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, ' ')
+        .normalize('NFKD')
+        .replace(/[^\w\s]/g, ' ')
+        .replace(/_/g, ' ')
+        .replace(/\s+/g, ' ')
         .trim();
     }
 
@@ -267,19 +233,42 @@
       return digits;
     }
 
+    function isPhoneLikelyValid(value) {
+      const digits = normalizePhone(value);
+      return /^08\d{8,11}$/.test(digits);
+    }
+
     function maskPhone(value) {
       const digits = normalizePhone(value);
       if (!digits) return '-';
-      if (digits.length <= 6) return `${digits.slice(0, 2)}***${digits.slice(-1)}`;
-      if (digits.length <= 8) return `${digits.slice(0, 2)}***${digits.slice(-2)}`;
+      if (digits.length <= 7) return `${digits.slice(0, 2)}***${digits.slice(-2)}`;
       return `${digits.slice(0, 4)}*****${digits.slice(-3)}`;
     }
 
-    function maskTeacherInfo(value) {
+    function extractPhoneFromText(value) {
       const raw = cleanText(value);
-      if (!raw) return 'Guru -';
-      const masked = raw.replace(/(?:\+?62|0)?[0-9][0-9\s().-]{7,}[0-9]/g, (match) => maskPhone(match));
-      return `Guru ${masked}`;
+      const match = raw.match(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/);
+      return match ? cleanText(match[0]) : '';
+    }
+
+    function stripPhoneFromText(value) {
+      const raw = cleanText(value);
+      if (!raw) return '-';
+      const stripped = raw
+        .replace(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/g, '')
+        .replace(/[\s\-–—,;:()]+$/g, '')
+        .replace(/^[\s\-–—,;:()]+/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      return stripped || raw;
+    }
+
+    function classifyStatus(value) {
+      const raw = cleanText(value).toUpperCase();
+      if (!raw) return 'UNKNOWN';
+      if (raw.includes('TIDAK LOLOS') || raw === 'TIDAK' || raw === 'TID') return 'TIDAK LOLOS';
+      if (raw.includes('LOLOS') || raw.includes('LULUS') || raw.includes('DITERIMA')) return 'LOLOS';
+      return 'UNKNOWN';
     }
 
     function escapeHtml(text) {
@@ -322,51 +311,163 @@
       return cleanText(key && row ? row[key] : '');
     }
 
-    function getRowIdentity(row, fields) {
-      const nama = cleanText(getValue(row, fields.nama)).toLowerCase();
-      const kontak = normalizePhone(getValue(row, fields.kontak));
-      if (nama && kontak) return `name:${nama}|phone:${kontak}`;
-      if (kontak) return `phone:${kontak}`;
-      return `name:${nama}`;
+    function mapRow(row, fields, index) {
+      const nama = getValue(row, fields.nama);
+      const phone = normalizePhone(getValue(row, fields.kontak));
+      const sekolah = getValue(row, fields.sekolah);
+      const kelas = getValue(row, fields.kelas);
+      const guruRaw = getValue(row, fields.guru);
+      const guruPhone = normalizePhone(extractPhoneFromText(guruRaw));
+      const guru = stripPhoneFromText(guruRaw);
+      const statusRaw = getValue(row, fields.status);
+      const status = classifyStatus(statusRaw);
+      const notes = [];
+
+      if (!nama) notes.push('Nama kosong');
+      if (!statusRaw) notes.push('Status kosong');
+      if (phone && !isPhoneLikelyValid(phone)) notes.push('Nomor peserta perlu cek');
+      if (guruPhone && !isPhoneLikelyValid(guruPhone)) notes.push('Nomor guru perlu cek');
+      if (status === 'UNKNOWN') notes.push('Status perlu cek');
+
+      return {
+        _rowNumber: index + 2,
+        nama,
+        namaKey: normalizeKey(nama),
+        kontak: phone,
+        sekolah,
+        sekolahKey: normalizeKey(sekolah),
+        kelas,
+        guru,
+        guruKey: normalizeKey(guru),
+        guruPhone,
+        statusRaw,
+        status,
+        notes,
+        isKept: false,
+        duplicateGroupSize: 1,
+        duplicateGroupKey: '',
+        conflictStatus: false,
+        needsReview: false
+      };
     }
 
-    function getRowScore(row, fields) {
-      const values = [fields.nama, fields.kontak, fields.sekolah, fields.kelas, fields.guru, fields.status]
-        .map((field) => cleanText(getValue(row, field)));
-      let score = values.filter(Boolean).length;
-      if (cleanText(getValue(row, fields.sekolah))) score += 2;
-      if (cleanText(getValue(row, fields.kelas))) score += 1;
-      if (cleanText(getValue(row, fields.guru))) score += 1;
-      if (normalizePhone(getValue(row, fields.kontak))) score += 2;
+    function getIdentity(item) {
+      const hasValidPhone = isPhoneLikelyValid(item.kontak);
+      if (hasValidPhone && item.namaKey) return `np:${item.namaKey}|${item.kontak}`;
+      if (hasValidPhone) return `p:${item.kontak}`;
+      if (item.namaKey && item.sekolahKey) return `ns:${item.namaKey}|${item.sekolahKey}`;
+      if (item.namaKey) return `n:${item.namaKey}`;
+      if (item.kontak) return `rawp:${item.kontak}`;
+      return `row:${item._rowNumber}`;
+    }
+
+    function getRowScore(item) {
+      let score = 0;
+      if (item.nama) score += 3;
+      if (item.sekolah) score += 2;
+      if (item.kelas) score += 1;
+      if (item.guru && item.guru !== '-') score += 1;
+      if (item.status !== 'UNKNOWN') score += 2;
+      if (isPhoneLikelyValid(item.kontak)) score += 3;
+      if (isPhoneLikelyValid(item.guruPhone)) score += 1;
       return score;
     }
 
-    function dedupeRowsForPublic(rows, fields) {
-      const map = new Map();
-      for (const row of rows || []) {
-        if (!cleanText(getValue(row, fields.nama))) continue;
-        const key = getRowIdentity(row, fields);
-        const current = map.get(key);
-        if (!current) {
-          map.set(key, row);
-          continue;
+    function chooseBestRow(items) {
+      return items.reduce((best, current) => {
+        if (!best) return current;
+        const bestScore = getRowScore(best);
+        const currentScore = getRowScore(current);
+        if (currentScore > bestScore) return current;
+        if (currentScore < bestScore) return best;
+        if (best.status !== current.status) {
+          if (current.status === 'LOLOS') return current;
+          if (best.status === 'LOLOS') return best;
+          if (current.status === 'TIDAK LOLOS' && best.status === 'UNKNOWN') return current;
+          if (best.status === 'TIDAK LOLOS' && current.status === 'UNKNOWN') return best;
         }
+        return current._rowNumber < best._rowNumber ? current : best;
+      }, null);
+    }
 
-        const currentStatus = classifyStatus(getValue(current, fields.status));
-        const nextStatus = classifyStatus(getValue(row, fields.status));
+    function processRows(rawRows, fields) {
+      const mappedRows = rawRows.map((row, index) => mapRow(row, fields, index));
+      const groups = new Map();
 
-        if (currentStatus !== nextStatus) {
-          if (nextStatus === 'LOLOS') {
-            map.set(key, row);
-          }
-          continue;
-        }
-
-        if (getRowScore(row, fields) > getRowScore(current, fields)) {
-          map.set(key, row);
-        }
+      for (const item of mappedRows) {
+        const key = getIdentity(item);
+        item.duplicateGroupKey = key;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
       }
-      return Array.from(map.values());
+
+      const duplicateExamples = [];
+      const conflictExamples = [];
+      const invalidPhoneExamples = [];
+      let duplicateFiltered = 0;
+      let duplicateGroups = 0;
+      let conflictGroups = 0;
+
+      for (const [key, items] of groups.entries()) {
+        const winner = chooseBestRow(items);
+        const statuses = [...new Set(items.map((item) => item.status).filter((status) => status !== 'UNKNOWN'))];
+        const hasConflict = statuses.length > 1;
+        const hasDuplicate = items.length > 1;
+
+        if (hasDuplicate) {
+          duplicateGroups += 1;
+          duplicateFiltered += items.length - 1;
+          if (duplicateExamples.length < 6) {
+            const sample = winner || items[0];
+            duplicateExamples.push(`${sample.nama || '(tanpa nama)'} • ${sample.sekolah || '-'} • ${items.length} baris`);
+          }
+        }
+
+        if (hasConflict) {
+          conflictGroups += 1;
+          if (conflictExamples.length < 6) {
+            const sample = winner || items[0];
+            conflictExamples.push(`${sample.nama || '(tanpa nama)'} • ${statuses.join(' / ')}`);
+          }
+        }
+
+        items.forEach((item) => {
+          item.duplicateGroupSize = items.length;
+          item.conflictStatus = hasConflict;
+          item.isKept = winner === item;
+          if (!item.isKept && hasDuplicate) item.notes.push('Tersaring dedup');
+          if (hasConflict) item.notes.push('Konflik status');
+          if (!item.kontak || !isPhoneLikelyValid(item.kontak)) {
+            if (invalidPhoneExamples.length < 6) invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • ${item.kontak || '-'} `);
+          }
+          item.needsReview = item.notes.some((note) => note !== 'Tersaring dedup');
+        });
+      }
+
+      const finalRows = mappedRows.filter((item) => item.isKept);
+      const schools = new Set(finalRows.map((item) => item.sekolahKey).filter(Boolean));
+      const lolosCount = finalRows.filter((item) => item.status === 'LOLOS').length;
+      const tidakLolosCount = finalRows.filter((item) => item.status === 'TIDAK LOLOS').length;
+      const reviewCount = finalRows.filter((item) => item.needsReview).length;
+
+      return {
+        mappedRows,
+        finalRows,
+        stats: {
+          totalRaw: mappedRows.length,
+          totalFinal: finalRows.length,
+          duplicateFiltered,
+          duplicateGroups,
+          conflictGroups,
+          reviewCount,
+          lolosCount,
+          tidakLolosCount,
+          schoolsCount: schools.size,
+          duplicateExamples,
+          conflictExamples,
+          invalidPhoneExamples
+        }
+      };
     }
 
     async function fetchCsvText(urls) {
@@ -402,35 +503,8 @@
       el.selfCheckButton.textContent = isChecking ? 'Mengecek...' : 'Cek Hasil Sekarang';
     }
 
-    async function loadConfig() {
-      el.announcementText.textContent = APP_CONFIG.defaultAnnouncement;
-      if (!APP_CONFIG.configGid) return;
-
-      const configUrls = [
-        `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/export?format=csv&gid=${APP_CONFIG.configGid}`,
-        `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/gviz/tq?tqx=out:csv&gid=${APP_CONFIG.configGid}`
-      ];
-
-      try {
-        const csvText = await fetchCsvText(configUrls);
-        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: 'greedy' });
-        const configMap = new Map();
-
-        for (const row of parsed.data || []) {
-          const key = cleanText(row.KEY || row.Key || row.key);
-          const value = cleanText(row.VALUE || row.Value || row.value);
-          if (key) configMap.set(key.toUpperCase(), value);
-        }
-
-        const announcement = configMap.get('PEMBERITAHUAN') || configMap.get('ANNOUNCEMENT');
-        if (announcement) el.announcementText.textContent = announcement;
-      } catch (error) {
-        console.warn('Gagal memuat CONFIG:', error);
-      }
-    }
-
     function getCacheKey() {
-      return `landing-cache-public-dedup-v2-${APP_CONFIG.sheetId}-${APP_CONFIG.participantGid}`;
+      return `landing-sync-v3-${APP_CONFIG.sheetId}-${APP_CONFIG.participantGid}`;
     }
 
     function saveCache(payload) {
@@ -456,14 +530,56 @@
       }
     }
 
+    async function loadConfig() {
+      el.announcementText.textContent = APP_CONFIG.defaultAnnouncement;
+      if (!APP_CONFIG.configGid) return;
+
+      const configUrls = [
+        `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/export?format=csv&gid=${APP_CONFIG.configGid}`,
+        `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/gviz/tq?tqx=out:csv&gid=${APP_CONFIG.configGid}`
+      ];
+
+      try {
+        const csvText = await fetchCsvText(configUrls);
+        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: 'greedy' });
+        const configMap = new Map();
+        for (const row of parsed.data || []) {
+          const key = cleanText(row.KEY || row.Key || row.key);
+          const value = cleanText(row.VALUE || row.Value || row.value);
+          if (key) configMap.set(key.toUpperCase(), value);
+        }
+        const announcement = configMap.get('PEMBERITAHUAN') || configMap.get('ANNOUNCEMENT');
+        if (announcement) el.announcementText.textContent = announcement;
+      } catch (error) {
+        console.warn('Gagal memuat CONFIG:', error);
+      }
+    }
+
+    function sanitizeParsedRows(parsedRows) {
+      return (parsedRows || [])
+        .slice(0, APP_CONFIG.maxRows)
+        .map((row) => {
+          const cleaned = {};
+          for (const [key, value] of Object.entries(row || {})) {
+            if (cleanText(key)) cleaned[key] = cleanText(value);
+          }
+          return cleaned;
+        })
+        .filter((row) => Object.values(row).some((value) => cleanText(value)));
+    }
+
+    function renderSummary() {
+      return;
+    }
+
     function updateHeaderInfo() {
-      if (!state.lastLoadedAt) {
+      if (!state.lastLoadedAt || !state.stats) {
         el.lastUpdatedText.textContent = 'Data belum dimuat';
         el.cacheText.textContent = 'Sumber data belum tersedia';
         return;
       }
-      el.lastUpdatedText.textContent = `Terakhir dimuat: ${state.lastLoadedAt.toLocaleString('id-ID')} • ${state.publicRows.length} peserta`;
-      el.cacheText.textContent = `Sumber data: ${state.cacheSource} (${state.lastLoadedAt.toLocaleString('id-ID')})`;
+      el.lastUpdatedText.textContent = `Terakhir dimuat: ${state.lastLoadedAt.toLocaleString('id-ID')}`;
+      el.cacheText.textContent = `Sumber data: ${state.cacheSource}`;
     }
 
     function hideFeedback() {
@@ -478,23 +594,11 @@
       el.selfCheckEmpty.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    function classifyStatus(value) {
-      const raw = cleanText(value).toUpperCase();
-      if (!raw) return 'UNKNOWN';
-      if (raw.includes('TIDAK LOLOS') || raw === 'TIDAK' || raw === 'TID') return 'TIDAK LOLOS';
-      if (raw.includes('LOLOS') || raw.includes('LULUS') || raw.includes('DITERIMA')) return 'LOLOS';
-      return 'UNKNOWN';
-    }
-
-    function showResult(row) {
-      const nama = getValue(row, state.fields.nama) || '-';
-      const sekolah = getValue(row, state.fields.sekolah) || '-';
-      const statusRaw = getValue(row, state.fields.status) || '-';
-      const statusType = classifyStatus(statusRaw);
-
+    function showResult(item) {
+      const statusType = item.status;
       el.selfCheckEmpty.classList.add('hidden');
-      el.selfCheckResultName.textContent = nama;
-      el.selfCheckResultSchool.textContent = sekolah;
+      el.selfCheckResultName.textContent = item.nama || '-';
+      el.selfCheckResultSchool.textContent = item.sekolah || '-';
 
       if (statusType === 'LOLOS') {
         el.selfCheckCard.className = 'rounded-[2rem] border border-emerald-200 bg-[linear-gradient(135deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.98)_28%,rgba(236,253,245,0.98)_100%)] p-5 sm:p-7 md:p-8 shadow-[0_24px_70px_-38px_rgba(16,185,129,0.35)] fade-in';
@@ -510,7 +614,7 @@
         el.selfCheckCard.className = 'rounded-[2rem] border border-slate-200 bg-[linear-gradient(135deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.98)_40%,rgba(239,246,255,0.96)_100%)] p-5 sm:p-7 md:p-8 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.18)] fade-in';
         el.selfCheckResultStatusWrap.className = 'inline-flex items-center rounded-full px-4 sm:px-5 py-3 shadow-sm ring-1 ring-slate-200 bg-white/95 backdrop-blur-sm';
         el.selfCheckResultStatus.className = 'text-sm sm:text-base font-extrabold tracking-[0.08em] uppercase text-slate-700';
-        el.selfCheckResultStatus.textContent = statusRaw || 'STATUS BELUM TERSEDIA';
+        el.selfCheckResultStatus.textContent = item.statusRaw || 'STATUS PERLU CEK';
       }
 
       el.selfCheckResult.classList.remove('hidden');
@@ -518,7 +622,7 @@
     }
 
     async function runSelfCheck() {
-      const nameQuery = cleanText(el.selfCheckName.value).toLowerCase();
+      const nameQuery = normalizeKey(el.selfCheckName.value);
       const phoneQuery = normalizePhone(el.selfCheckPhone.value);
       hideFeedback();
 
@@ -526,7 +630,6 @@
         showMessage('Masukkan nama peserta atau nomor WhatsApp terlebih dahulu.');
         return;
       }
-
       if (phoneQuery && phoneQuery.length < 8) {
         showMessage('Nomor WhatsApp terlalu pendek. Masukkan minimal 8 digit agar pencarian akurat.');
         return;
@@ -535,11 +638,11 @@
       setCheckingState(true);
       try {
         let match = null;
-        if (phoneQuery && state.fields.kontak) {
-          match = state.publicRows.find((row) => normalizePhone(getValue(row, state.fields.kontak)) === phoneQuery);
+        if (phoneQuery) {
+          match = state.finalRows.find((item) => item.kontak === phoneQuery);
         }
-        if (!match && nameQuery && state.fields.nama) {
-          match = state.publicRows.find((row) => cleanText(getValue(row, state.fields.nama)).toLowerCase() === nameQuery);
+        if (!match && nameQuery) {
+          match = state.finalRows.find((item) => item.namaKey === nameQuery);
         }
         if (!match) {
           showMessage('Data tidak ditemukan. Pastikan nama lengkap atau nomor WhatsApp sesuai dengan data pendaftaran.');
@@ -551,31 +654,20 @@
       }
     }
 
-    function buildPdfHtml(rows) {
+    function buildPdfHtml(finalRows, stats) {
       const generatedAt = new Date().toLocaleString('id-ID');
-      const statusValues = rows.map((row) => getValue(row, state.fields.status));
-      const lolos = statusValues.filter((value) => classifyStatus(value) === 'LOLOS').length;
-      const tidakLolos = statusValues.filter((value) => classifyStatus(value) === 'TIDAK LOLOS').length;
       const announcement = escapeHtml(el.announcementText.textContent);
-
-      const rowHtml = rows.map((row, index) => {
-        const nama = escapeHtml(getValue(row, state.fields.nama) || '-');
-        const wa = escapeHtml(maskPhone(getValue(row, state.fields.kontak)));
-        const sekolah = escapeHtml(getValue(row, state.fields.sekolah) || '-');
-        const kelas = escapeHtml(getValue(row, state.fields.kelas) || '-');
-        const guru = escapeHtml(maskTeacherInfo(getValue(row, state.fields.guru)).replace(/^Guru\s*/, '') || '-');
-        const status = escapeHtml(getValue(row, state.fields.status) || '-');
-        return `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${nama}</td>
-            <td>${wa}</td>
-            <td>${sekolah}</td>
-            <td>${kelas}</td>
-            <td>${guru}</td>
-            <td>${status}</td>
-          </tr>`;
-      }).join('');
+      const rowHtml = finalRows.map((item, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(item.nama || '-')}</td>
+          <td>${escapeHtml(maskPhone(item.kontak))}</td>
+          <td>${escapeHtml(item.sekolah || '-')}</td>
+          <td>${escapeHtml(item.kelas || '-')}</td>
+          <td>${escapeHtml(item.guru || '-')}</td>
+          <td>${escapeHtml(item.status === 'UNKNOWN' ? (item.statusRaw || 'PERLU CEK') : item.status)}</td>
+        </tr>
+      `).join('');
 
       return `<!DOCTYPE html>
 <html lang="id">
@@ -588,20 +680,13 @@
   h1 { font-size: 24px; margin: 0 0 8px; }
   .meta { color: #475569; font-size: 12px; margin-bottom: 14px; }
   .notice { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 14px; line-height: 1.5; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
   .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; }
   .label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .08em; }
   .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
   table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
   th, td { border: 1px solid #cbd5e1; padding: 6px 7px; vertical-align: top; word-break: break-word; }
   th { background: #f8fafc; text-align: left; }
-  th:nth-child(1), td:nth-child(1) { width: 4%; }
-  th:nth-child(2), td:nth-child(2) { width: 20%; }
-  th:nth-child(3), td:nth-child(3) { width: 12%; }
-  th:nth-child(4), td:nth-child(4) { width: 18%; }
-  th:nth-child(5), td:nth-child(5) { width: 8%; }
-  th:nth-child(6), td:nth-child(6) { width: 24%; }
-  th:nth-child(7), td:nth-child(7) { width: 14%; }
 </style>
 </head>
 <body>
@@ -609,9 +694,10 @@
   <div class="meta">Dicetak: ${generatedAt}</div>
   <div class="notice"><strong>Pemberitahuan:</strong><br>${announcement}</div>
   <div class="stats">
-    <div class="card"><div class="label">Total Peserta</div><div class="value">${rows.length}</div></div>
-    <div class="card"><div class="label">Lolos</div><div class="value">${lolos}</div></div>
-    <div class="card"><div class="label">Tidak Lolos</div><div class="value">${tidakLolos}</div></div>
+    <div class="card"><div class="label">Total Data Masuk</div><div class="value">${stats.totalRaw}</div></div>
+    <div class="card"><div class="label">Data Final</div><div class="value">${stats.totalFinal}</div></div>
+    <div class="card"><div class="label">Duplikat Tersaring</div><div class="value">${stats.duplicateFiltered}</div></div>
+    <div class="card"><div class="label">Perlu Cek Manual</div><div class="value">${stats.reviewCount}</div></div>
   </div>
   <table>
     <thead>
@@ -636,49 +722,20 @@
         alert('Tunggu sampai data selesai dimuat.');
         return;
       }
-      if (!state.publicRows.length) {
+      if (!state.finalRows.length || !state.stats) {
         alert('Data belum dimuat.');
         return;
       }
-      if (!state.fields.nama || !state.fields.kontak || !state.fields.sekolah || !state.fields.kelas || !state.fields.guru || !state.fields.status) {
-        alert('Sebagian kolom spreadsheet belum terbaca. Periksa header sheet terlebih dahulu.');
-        return;
-      }
-
       const printWindow = window.open('', '_blank', 'width=1400,height=900');
       if (!printWindow) {
         alert('Popup diblokir browser. Izinkan popup untuk unduh PDF.');
         return;
       }
-
       printWindow.document.open();
-      printWindow.document.write(buildPdfHtml(state.publicRows));
+      printWindow.document.write(buildPdfHtml(state.finalRows, state.stats));
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => printWindow.print(), 500);
-    }
-
-    function updateMobileTools() {
-      if (window.innerWidth >= 768) {
-        el.adminTools.classList.remove('hidden');
-        el.mobileAdminToggleIcon.style.transform = 'rotate(0deg)';
-        return;
-      }
-      el.adminTools.classList.toggle('hidden', !state.mobileToolsOpen);
-      el.mobileAdminToggleIcon.style.transform = state.mobileToolsOpen ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
-
-    function sanitizeParsedRows(parsedRows) {
-      return (parsedRows || [])
-        .slice(0, APP_CONFIG.maxRows)
-        .map((row) => {
-          const cleaned = {};
-          for (const [key, value] of Object.entries(row || {})) {
-            if (cleanText(key)) cleaned[key] = cleanText(value);
-          }
-          return cleaned;
-        })
-        .filter((row) => Object.values(row).some((value) => cleanText(value)));
     }
 
     async function loadSpreadsheetData(forceRefresh = false) {
@@ -686,41 +743,42 @@
       try {
         if (!forceRefresh) {
           const cached = loadCache();
-          if (cached?.allRows?.length || cached?.rows?.length) {
-            state.allRows = cached.allRows || cached.rows || [];
-            state.headers = cached.headers || Object.keys((state.allRows[0] || cached.publicRows?.[0] || {}));
+          if (cached?.rawRows?.length && cached?.processed?.stats) {
+            state.rawRows = cached.rawRows;
+            state.headers = cached.headers || Object.keys(cached.rawRows[0] || {});
             state.fields = cached.fields || buildFieldMap(state.headers);
-            state.publicRows = cached.publicRows || dedupeRowsForPublic(state.allRows, state.fields);
+            state.processedRows = cached.processed.mappedRows || [];
+            state.finalRows = cached.processed.finalRows || [];
+            state.stats = cached.processed.stats || null;
             state.lastLoadedAt = new Date(cached.savedAt);
             state.cacheSource = 'cache lokal';
+            renderSummary();
             updateHeaderInfo();
           }
         }
 
         const csvText = await fetchCsvText(participantCsvUrls);
-        const parsed = Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: 'greedy',
-          dynamicTyping: false
-        });
-
+        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: 'greedy', dynamicTyping: false });
         const rows = sanitizeParsedRows(parsed.data);
         const headers = Object.keys(rows[0] || parsed.meta.fields || {});
         const fields = buildFieldMap(headers);
-        const publicRows = dedupeRowsForPublic(rows, fields);
+        const processed = processRows(rows, fields);
 
-        state.allRows = rows;
-        state.publicRows = publicRows;
+        state.rawRows = rows;
         state.headers = headers;
         state.fields = fields;
+        state.processedRows = processed.mappedRows;
+        state.finalRows = processed.finalRows;
+        state.stats = processed.stats;
         state.lastLoadedAt = new Date();
         state.cacheSource = 'jaringan';
 
-        saveCache({ allRows: rows, publicRows, headers, fields });
+        saveCache({ rawRows: rows, headers, fields, processed });
+        renderSummary();
         updateHeaderInfo();
       } catch (error) {
         console.error(error);
-        if (!state.allRows.length && !state.publicRows.length) {
+        if (!state.stats) {
           el.lastUpdatedText.textContent = 'Gagal memuat data';
           el.cacheText.textContent = 'Pastikan spreadsheet dapat diakses.';
         }
@@ -733,20 +791,14 @@
     function attachEvents() {
       el.refreshButton.addEventListener('click', () => loadSpreadsheetData(true));
       el.exportPdfButton.addEventListener('click', exportPdf);
-      el.selfCheckForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+      el.selfCheckForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
         await runSelfCheck();
       });
-      el.mobileAdminToggle.addEventListener('click', () => {
-        state.mobileToolsOpen = !state.mobileToolsOpen;
-        updateMobileTools();
-      });
-      window.addEventListener('resize', updateMobileTools);
     }
 
     async function init() {
       attachEvents();
-      updateMobileTools();
       await loadConfig();
       await loadSpreadsheetData(false);
     }
