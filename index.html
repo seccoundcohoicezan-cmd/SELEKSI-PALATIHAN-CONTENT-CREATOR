@@ -549,7 +549,7 @@
         const configMap = new Map();
         for (const row of parsed.data || []) {
           const key = cleanText(row.KEY || row.Key || row.key);
-          const value = cleanText(row.VALUE || row.Value || row.value);
+          const value = cleanMultilineText(row.VALUE || row.Value || row.value);
           if (key) configMap.set(key.toUpperCase(), value);
         }
         const announcement = configMap.get('PEMBERITAHUAN') || configMap.get('ANNOUNCEMENT');
@@ -661,14 +661,13 @@
     function buildPdfHtml(finalRows, stats) {
       const generatedAt = new Date().toLocaleString('id-ID');
       const announcement = escapeHtml(el.announcementText.textContent);
+
       const rowHtml = finalRows.map((item, index) => `
         <tr>
           <td>${index + 1}</td>
           <td>${escapeHtml(item.nama || '-')}</td>
-          <td>${escapeHtml(maskPhone(item.kontak))}</td>
           <td>${escapeHtml(item.sekolah || '-')}</td>
           <td>${escapeHtml(item.kelas || '-')}</td>
-          <td>${escapeHtml(item.guru || '-')}</td>
           <td>${escapeHtml(item.status === 'UNKNOWN' ? (item.statusRaw || 'PERLU CEK') : item.status)}</td>
         </tr>
       `).join('');
@@ -679,39 +678,56 @@
 <meta charset="UTF-8" />
 <title>Pengumuman Resmi</title>
 <style>
-  @page { size: A4 landscape; margin: 14mm; }
+  @page { size: A4 portrait; margin: 12mm; }
+  * { box-sizing: border-box; }
   body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; }
-  h1 { font-size: 24px; margin: 0 0 8px; }
-  .meta { color: #475569; font-size: 12px; margin-bottom: 14px; }
-  .notice { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 14px; line-height: 1.5; }
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-  .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; }
-  .label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .08em; }
-  .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
-  th, td { border: 1px solid #cbd5e1; padding: 6px 7px; vertical-align: top; word-break: break-word; }
-  th { background: #f8fafc; text-align: left; }
+  h1 { font-size: 18px; margin: 0 0 6px; }
+  .meta { color: #475569; font-size: 11px; margin-bottom: 10px; }
+  .notice {
+    border: 1px solid #a7f3d0;
+    background: #ecfdf5;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+    font-size: 11px;
+    white-space: pre-line;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 10px;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 5px 6px;
+    vertical-align: top;
+    word-break: break-word;
+  }
+  th {
+    background: #f8fafc;
+    text-align: left;
+  }
+  th:nth-child(1), td:nth-child(1) { width: 8%; }
+  th:nth-child(2), td:nth-child(2) { width: 32%; }
+  th:nth-child(3), td:nth-child(3) { width: 32%; }
+  th:nth-child(4), td:nth-child(4) { width: 10%; text-align: center; }
+  th:nth-child(5), td:nth-child(5) { width: 18%; }
 </style>
 </head>
 <body>
   <h1>Pengumuman Seleksi Pelatihan Content Creator</h1>
   <div class="meta">Dicetak: ${generatedAt}</div>
-  <div class="notice"><strong>Pemberitahuan:</strong><br>${announcement}</div>
-  <div class="stats">
-    <div class="card"><div class="label">Total Data Masuk</div><div class="value">${stats.totalRaw}</div></div>
-    <div class="card"><div class="label">Data Final</div><div class="value">${stats.totalFinal}</div></div>
-    <div class="card"><div class="label">Duplikat Tersaring</div><div class="value">${stats.duplicateFiltered}</div></div>
-    <div class="card"><div class="label">Perlu Cek Manual</div><div class="value">${stats.reviewCount}</div></div>
-  </div>
+  <div class="notice"><strong>Pemberitahuan:</strong>
+${announcement}</div>
   <table>
     <thead>
       <tr>
         <th>No</th>
         <th>Nama</th>
-        <th>WhatsApp</th>
         <th>Sekolah</th>
         <th>Kelas</th>
-        <th>Guru</th>
         <th>Status</th>
       </tr>
     </thead>
