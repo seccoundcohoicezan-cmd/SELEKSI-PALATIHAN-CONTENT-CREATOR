@@ -12,6 +12,22 @@
     .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .filter-chip {
+      padding: 10px 14px;
+      border-radius: 9999px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 800;
+      transition: all .18s ease;
+    }
+    .filter-chip:hover { background: #f8fafc; }
+    .filter-chip.active {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
     @media print {
       body { background: white !important; }
       #loginScreen, #lockButton, #refreshButton, #downloadPdfButton, #clearSearchButton { display: none !important; }
@@ -69,7 +85,7 @@
       </div>
 
       <div class="flex flex-wrap gap-3">
-        <a href="./index_synced.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
+        <a href="./index.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
           Kembali ke Index
         </a>
         <button id="lockButton" class="px-5 py-3 rounded-2xl bg-white border border-rose-200 text-rose-600 font-bold hover:bg-rose-50 transition-all shadow-sm">
@@ -168,6 +184,20 @@
             Reset Pencarian
           </button>
         </div>
+
+        <div id="quickFilters" class="flex flex-wrap gap-2">
+          <button type="button" data-filter="all" class="filter-chip active">Semua (0)</button>
+          <button type="button" data-filter="lolos" class="filter-chip">Lolos (0)</button>
+          <button type="button" data-filter="tidak_lolos" class="filter-chip">Tidak Lolos (0)</button>
+          <button type="button" data-filter="konflik" class="filter-chip">Grup Konflik (0)</button>
+          <button type="button" data-filter="duplikat" class="filter-chip">Duplikat Tersaring (0)</button>
+          <button type="button" data-filter="review" class="filter-chip">Perlu Cek Manual (0)</button>
+          <button type="button" data-filter="masuk_index" class="filter-chip">Masuk Index (0)</button>
+          <button type="button" data-filter="tersaring" class="filter-chip">Tersaring (0)</button>
+        </div>
+        <p class="text-xs text-slate-400">
+          Filter disinkronkan dengan kartu ringkasan: Grup Konflik mengikuti jumlah grup konflik, Duplikat Tersaring mengikuti jumlah baris yang tersaring dedup, dan Perlu Cek Manual mengikuti data final yang masuk index.
+        </p>
       </div>
 
       <div id="loadingState" class="px-8 py-12 text-center text-slate-500">
@@ -241,7 +271,8 @@ const state = {
   stats: null,
   searchTimer: null,
   fields: {},
-  headers: []
+  headers: [],
+  activeFilter: 'all'
 };
 
 const participantCsvUrls = [
@@ -260,6 +291,7 @@ const el = {
   downloadPdfButton: document.getElementById('downloadPdfButton'),
   searchInput: document.getElementById('searchInput'),
   clearSearchButton: document.getElementById('clearSearchButton'),
+  quickFilters: document.getElementById('quickFilters'),
   loadingState: document.getElementById('loadingState'),
   tableWrapper: document.getElementById('tableWrapper'),
   tableBody: document.getElementById('tableBody'),
@@ -618,10 +650,90 @@ function renderSummary() {
   el.invalidPhoneList.innerHTML = stats.invalidPhoneExamples.length ? stats.invalidPhoneExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
 }
 
+function matchesQuickFilter(item, filter) {
+  switch (filter) {
+    case 'all':
+      return true;
+    case 'lolos':
+      return item.isKept === true && item.status === 'LOLOS';
+    case 'tidak_lolos':
+      return item.isKept === true && item.status === 'TIDAK LOLOS';
+    case 'konflik':
+      return item.conflictStatus === true;
+    case 'duplikat':
+      return item.notes.includes('Tersaring dedup');
+    case 'review':
+      return item.isKept === true && item.needsReview === true;
+    case 'masuk_index':
+      return item.isKept === true;
+    case 'tersaring':
+      return item.isKept === false;
+    default:
+      return true;
+  }
+}
+
+function getQuickFilterCounts() {
+  const conflictGroupKeys = new Set(
+    state.mappedRows
+      .filter((item) => item.conflictStatus === true)
+      .map((item) => item.duplicateGroupKey)
+  );
+
+  return {
+    all: state.mappedRows.length,
+    lolos: state.mappedRows.filter((item) => item.isKept === true && item.status === 'LOLOS').length,
+    tidak_lolos: state.mappedRows.filter((item) => item.isKept === true && item.status === 'TIDAK LOLOS').length,
+    konflik: conflictGroupKeys.size,
+    duplikat: state.mappedRows.filter((item) => item.notes.includes('Tersaring dedup')).length,
+    review: state.mappedRows.filter((item) => item.isKept === true && item.needsReview === true).length,
+    masuk_index: state.mappedRows.filter((item) => item.isKept === true).length,
+    tersaring: state.mappedRows.filter((item) => item.isKept === false).length
+  };
+}
+
+function renderQuickFilters() {
+  const counts = getQuickFilterCounts();
+  const labels = {
+    all: 'Semua',
+    lolos: 'Lolos',
+    tidak_lolos: 'Tidak Lolos',
+    konflik: 'Grup Konflik',
+    duplikat: 'Duplikat Tersaring',
+    review: 'Perlu Cek Manual',
+    masuk_index: 'Masuk Index',
+    tersaring: 'Tersaring'
+  };
+
+  el.quickFilters.querySelectorAll('[data-filter]').forEach((btn) => {
+    const key = btn.dataset.filter;
+    btn.textContent = `${labels[key]} (${counts[key] ?? 0})`;
+    btn.classList.toggle('active', state.activeFilter === key);
+  });
+}
+
 function getFilteredRows() {
   const query = cleanText(el.searchInput.value).toLowerCase();
-  if (!query) return state.mappedRows;
-  return state.mappedRows.filter(item => item.searchIndex.includes(query));
+
+  if (state.activeFilter === 'konflik') {
+    const conflictGroupKeys = new Set(
+      state.mappedRows
+        .filter((item) => item.conflictStatus === true)
+        .map((item) => item.duplicateGroupKey)
+    );
+
+    return state.mappedRows.filter((item) => {
+      const passQuickFilter = conflictGroupKeys.has(item.duplicateGroupKey);
+      const passSearch = !query || item.searchIndex.includes(query);
+      return passQuickFilter && passSearch;
+    });
+  }
+
+  return state.mappedRows.filter((item) => {
+    const passQuickFilter = matchesQuickFilter(item, state.activeFilter);
+    const passSearch = !query || item.searchIndex.includes(query);
+    return passQuickFilter && passSearch;
+  });
 }
 
 function renderTable() {
@@ -713,6 +825,7 @@ async function loadAudit() {
     state.stats = processed.stats;
 
     renderSummary();
+    renderQuickFilters();
     renderTable();
   } catch (error) {
     console.error(error);
@@ -739,6 +852,7 @@ function resetAccessGate({ clearData = false } = {}) {
     state.filteredRows = [];
     state.finalRows = [];
     state.stats = null;
+    state.activeFilter = 'all';
     el.searchInput.value = '';
     el.tableBody.innerHTML = '';
     el.tableInfo.textContent = '0 baris';
@@ -875,6 +989,16 @@ function initAuth() {
   });
 }
 
+function attachQuickFilters() {
+  el.quickFilters.querySelectorAll('[data-filter]').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      state.activeFilter = chip.dataset.filter;
+      renderQuickFilters();
+      renderTable();
+    });
+  });
+}
+
 function attachEvents() {
   el.lockButton.addEventListener('click', () => resetAccessGate({ clearData: true }));
   el.refreshButton.addEventListener('click', loadAudit);
@@ -882,11 +1006,14 @@ function attachEvents() {
   el.searchInput.addEventListener('input', scheduleSearchRender);
   el.clearSearchButton.addEventListener('click', () => {
     el.searchInput.value = '';
+    state.activeFilter = 'all';
+    renderQuickFilters();
     renderTable();
     el.searchInput.focus();
   });
 }
 
+attachQuickFilters();
 attachEvents();
 initAuth();
 </script>
