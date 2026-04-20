@@ -215,6 +215,18 @@
       return (value ?? '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
     }
 
+    function cleanMultilineText(value) {
+      return (value ?? '')
+        .toString()
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .split('\n')
+        .map((line) => line.trim())
+        .join('\n')
+        .trim();
+    }
+
     function normalizeHeader(value) {
       return cleanText(value).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
     }
