@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audit Data Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    @media print {
+      body { background: white !important; }
+      #loginScreen, #lockButton, #refreshButton, #downloadPdfButton, #clearSearchButton { display: none !important; }
+      #appShell { display: block !important; max-width: none !important; padding: 0 !important; margin: 0 !important; }
+      .shadow-sm, .shadow-2xl { box-shadow: none !important; }
+      #tableWrapper { display: block !important; overflow: visible !important; }
+      table { min-width: 100% !important; font-size: 11px !important; }
+      thead { display: table-header-group; }
+      tr, td, th { page-break-inside: avoid; }
+      @page { size: A4 landscape; margin: 12mm; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-md bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-8">
+      <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm mb-5 text-xs font-bold tracking-[0.2em] uppercase text-rose-600">
+        <span class="w-2 h-2 bg-rose-500 rounded-full"></span>
+        Akses Admin
+      </div>
+      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Masuk ke Audit Data</h1>
+      <p class="text-slate-500 mt-3 leading-relaxed">
+        Login untuk membuka audit lengkap, data full visible, dan PDF admin.
+      </p>
+
+      <form id="loginForm" class="mt-6 space-y-4">
+        <div>
+          <label for="passwordInput" class="block text-sm font-bold text-slate-700 mb-2">Sandi</label>
+          <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Masukkan sandi admin" class="w-full px-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-rose-500" />
+        </div>
+        <button type="submit" class="w-full px-5 py-4 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
+          Masuk
+        </button>
+      </form>
+
+      <p id="loginError" class="hidden mt-4 text-sm font-medium text-rose-600">
+        Sandi salah. Coba lagi.
+      </p>
+    </div>
+  </div>
+
+  <div id="appShell" class="hidden max-w-7xl mx-auto px-4 pt-8 md:pt-12">
+    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm mb-4 text-xs font-bold tracking-[0.2em] uppercase text-rose-600">
+          <span class="w-2 h-2 bg-rose-500 rounded-full"></span>
+          Audit Data Admin
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          AUDIT SINKRON DENGAN INDEX
+        </h1>
+        <p class="text-slate-500 mt-4 max-w-3xl">
+          Angka di halaman ini dihitung dari pipeline yang sama dengan index: cleaning → normalisasi → dedup → statistik final.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <a href="./index_synced.html" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
+          Kembali ke Index
+        </a>
+        <button id="lockButton" class="px-5 py-3 rounded-2xl bg-white border border-rose-200 text-rose-600 font-bold hover:bg-rose-50 transition-all shadow-sm">
+          Kunci Halaman
+        </button>
+        <button id="refreshButton" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
+          Muat Ulang Data
+        </button>
+        <button id="downloadPdfButton" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-sm">
+          Download PDF Full
+        </button>
+      </div>
+    </header>
+
+    <section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+      <div class="bg-white rounded-[1.9rem] border border-slate-200 p-6 shadow-sm">
+        <p class="text-xs font-bold tracking-[0.14em] uppercase text-slate-400">Total Data Masuk</p>
+        <div class="text-4xl font-black text-slate-900 mt-2" id="summary-total-raw">0</div>
+      </div>
+      <div class="bg-white rounded-[1.9rem] border border-emerald-200 p-6 shadow-sm">
+        <p class="text-xs font-bold tracking-[0.14em] uppercase text-emerald-500">Data Final di Index</p>
+        <div class="text-4xl font-black text-emerald-600 mt-2" id="summary-total-final">0</div>
+      </div>
+      <div class="bg-white rounded-[1.9rem] border border-rose-200 p-6 shadow-sm">
+        <p class="text-xs font-bold tracking-[0.14em] uppercase text-rose-500">Duplikat Tersaring</p>
+        <div class="text-4xl font-black text-rose-600 mt-2" id="summary-duplicates">0</div>
+      </div>
+      <div class="bg-white rounded-[1.9rem] border border-amber-200 p-6 shadow-sm">
+        <p class="text-xs font-bold tracking-[0.14em] uppercase text-amber-500">Perlu Cek Manual</p>
+        <div class="text-4xl font-black text-amber-600 mt-2" id="summary-review">0</div>
+      </div>
+      <div class="bg-white rounded-[1.9rem] border border-emerald-200 p-6 shadow-sm">
+        <p class="text-xs font-bold tracking-[0.14em] uppercase text-emerald-500">Lolos Final</p>
+        <div class="text-4xl font-black text-emerald-600 mt-2" id="summary-lolos">0</div>
+      </div>
+      <div class="bg-white rounded-[1.9rem] border border-amber-200 p-6 shadow-sm">
+        <p class="text-xs font-bold tracking-[0.14em] uppercase text-amber-500">Tidak Lolos Final</p>
+        <div class="text-4xl font-black text-amber-600 mt-2" id="summary-tidak-lolos">0</div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sekolah Unik</p>
+        <div class="text-3xl font-black text-slate-900 mt-1" id="summary-schools">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Grup Duplikat</p>
+        <div class="text-3xl font-black text-slate-900 mt-1" id="summary-duplicate-groups">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Konflik Status</p>
+        <div class="text-3xl font-black text-slate-900 mt-1" id="summary-conflicts">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Nomor Bermasalah</p>
+        <div class="text-3xl font-black text-slate-900 mt-1" id="summary-invalid-phone">0</div>
+      </div>
+      <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Status Belum Valid</p>
+        <div class="text-3xl font-black text-slate-900 mt-1" id="summary-unknown-status">0</div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+      <div class="bg-white rounded-[1.8rem] border border-slate-100 shadow-sm p-6">
+        <p class="font-extrabold text-slate-900 mb-4">Contoh Duplikat</p>
+        <div id="duplicate-example-list" class="text-slate-500 leading-relaxed space-y-2">-</div>
+      </div>
+      <div class="bg-white rounded-[1.8rem] border border-slate-100 shadow-sm p-6">
+        <p class="font-extrabold text-slate-900 mb-4">Konflik Status</p>
+        <div id="conflict-example-list" class="text-slate-500 leading-relaxed space-y-2">-</div>
+      </div>
+      <div class="bg-white rounded-[1.8rem] border border-slate-100 shadow-sm p-6">
+        <p class="font-extrabold text-slate-900 mb-4">Nomor Perlu Dicek</p>
+        <div id="invalid-phone-list" class="text-slate-500 leading-relaxed space-y-2">-</div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-slate-100 flex flex-col gap-4">
+        <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+          <div>
+            <h2 class="font-extrabold text-slate-900 text-lg">Tabel Audit Full Visible</h2>
+            <p class="text-sm text-slate-500 mt-1">Tabel ini menunjukkan data mentah, status final, dan apakah baris tersebut dipakai di index setelah dedup.</p>
+          </div>
+          <div class="text-sm font-bold text-slate-500" id="tableInfo">0 baris</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3">
+          <div class="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="searchInput" type="text" placeholder="Cari nama, sekolah, status, guru, nomor peserta, atau nomor guru..." class="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-emerald-500" />
+          </div>
+          <button id="clearSearchButton" class="px-5 py-4 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm">
+            Reset Pencarian
+          </button>
+        </div>
+      </div>
+
+      <div id="loadingState" class="px-8 py-12 text-center text-slate-500">
+        <div class="inline-flex items-center gap-3 bg-slate-50 border border-slate-200 px-5 py-3 rounded-full">
+          <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="4"></circle><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="4"></path></svg>
+          Mengambil data audit sinkron dari spreadsheet...
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar hidden" id="tableWrapper">
+        <table class="w-full text-left border-collapse min-w-[1750px]">
+          <thead>
+            <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
+              <th class="px-6 py-4">Baris</th>
+              <th class="px-6 py-4">Masuk Index</th>
+              <th class="px-6 py-4">Nama</th>
+              <th class="px-6 py-4">WhatsApp Peserta</th>
+              <th class="px-6 py-4">Sekolah</th>
+              <th class="px-6 py-4">Kelas</th>
+              <th class="px-6 py-4">Guru</th>
+              <th class="px-6 py-4">Nomor Guru</th>
+              <th class="px-6 py-4">Status Asli</th>
+              <th class="px-6 py-4">Status Final</th>
+              <th class="px-6 py-4">Catatan</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-50"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="hidden py-16 text-center text-slate-400 font-medium italic">
+        Tidak ada data audit yang cocok dengan pencarian.
+      </div>
+
+      <div id="errorState" class="hidden px-8 py-14 text-center">
+        <div class="inline-flex flex-col items-center gap-3 max-w-xl">
+          <div class="bg-rose-50 text-rose-600 p-4 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800">Audit belum bisa dimuat</h3>
+          <p class="text-slate-500 text-sm leading-relaxed" id="errorMessage"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+const ADMIN_PASSWORD = '606';
+
+const APP_CONFIG = {
+  sheetId: '1GACkosX_swAQolI6tjjaxefAATEcOJ5fEEKIBntDxAI',
+  participantGid: '0',
+  maxRows: 10000,
+  searchDebounceMs: 150
+};
+
+const FIELD_ALIASES = {
+  nama: ['Nama', 'Nama Lengkap', 'Nama Peserta'],
+  kontak: ['No Whatsapp Aktif', 'No WhatsApp Aktif', 'No Whatsapp', 'No WhatsApp', 'Whatsapp', 'WhatsApp', 'WA', 'No HP', 'Nomor WA'],
+  sekolah: ['Asal Sekolah', 'Sekolah', 'Nama Sekolah'],
+  kelas: ['Kelas'],
+  guru: ['Pihak Guru yang Mengajak Kamu Daftar', 'Guru', 'Nama Guru', 'Guru Pendamping'],
+  status: ['STATUS', 'Status', 'Hasil', 'Keterangan']
+};
+
+const state = {
+  rawRows: [],
+  mappedRows: [],
+  filteredRows: [],
+  finalRows: [],
+  stats: null,
+  searchTimer: null,
+  fields: {},
+  headers: []
+};
+
+const participantCsvUrls = [
+  `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/export?format=csv&gid=${APP_CONFIG.participantGid}`,
+  `https://docs.google.com/spreadsheets/d/${APP_CONFIG.sheetId}/gviz/tq?tqx=out:csv&gid=${APP_CONFIG.participantGid}`
+];
+
+const el = {
+  loginScreen: document.getElementById('loginScreen'),
+  appShell: document.getElementById('appShell'),
+  loginForm: document.getElementById('loginForm'),
+  passwordInput: document.getElementById('passwordInput'),
+  loginError: document.getElementById('loginError'),
+  lockButton: document.getElementById('lockButton'),
+  refreshButton: document.getElementById('refreshButton'),
+  downloadPdfButton: document.getElementById('downloadPdfButton'),
+  searchInput: document.getElementById('searchInput'),
+  clearSearchButton: document.getElementById('clearSearchButton'),
+  loadingState: document.getElementById('loadingState'),
+  tableWrapper: document.getElementById('tableWrapper'),
+  tableBody: document.getElementById('tableBody'),
+  tableInfo: document.getElementById('tableInfo'),
+  emptyState: document.getElementById('emptyState'),
+  errorState: document.getElementById('errorState'),
+  errorMessage: document.getElementById('errorMessage'),
+  summaryTotalRaw: document.getElementById('summary-total-raw'),
+  summaryTotalFinal: document.getElementById('summary-total-final'),
+  summaryDuplicates: document.getElementById('summary-duplicates'),
+  summaryReview: document.getElementById('summary-review'),
+  summaryLolos: document.getElementById('summary-lolos'),
+  summaryTidakLolos: document.getElementById('summary-tidak-lolos'),
+  summarySchools: document.getElementById('summary-schools'),
+  summaryDuplicateGroups: document.getElementById('summary-duplicate-groups'),
+  summaryConflicts: document.getElementById('summary-conflicts'),
+  summaryInvalidPhone: document.getElementById('summary-invalid-phone'),
+  summaryUnknownStatus: document.getElementById('summary-unknown-status'),
+  duplicateExampleList: document.getElementById('duplicate-example-list'),
+  conflictExampleList: document.getElementById('conflict-example-list'),
+  invalidPhoneList: document.getElementById('invalid-phone-list')
+};
+
+function cleanText(value) {
+  return (value ?? '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeHeader(value) {
+  return cleanText(value).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function normalizeKey(value) {
+  return cleanText(value)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^\w\s]/g, ' ')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function escapeHtml(text) {
+  return (text ?? '')
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function normalizePhone(value) {
+  const digits = cleanText(value).replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('62')) return '0' + digits.slice(2);
+  if (digits.startsWith('8')) return '0' + digits;
+  return digits;
+}
+
+function isPhoneLikelyValid(value) {
+  const digits = normalizePhone(value);
+  return /^08\d{8,11}$/.test(digits);
+}
+
+function extractPhoneFromText(value) {
+  const raw = cleanText(value);
+  const match = raw.match(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/);
+  return match ? cleanText(match[0]) : '';
+}
+
+function stripPhoneFromText(value) {
+  const raw = cleanText(value);
+  if (!raw) return '-';
+  const stripped = raw
+    .replace(/(?:\+?62|0)[0-9\s\-()]{7,}[0-9]/g, '')
+    .replace(/[\s\-–—,;:()]+$/g, '')
+    .replace(/^[\s\-–—,;:()]+/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return stripped || raw;
+}
+
+function classifyStatus(value) {
+  const raw = cleanText(value).toUpperCase();
+  if (!raw) return 'UNKNOWN';
+  if (raw.includes('TIDAK LOLOS') || raw === 'TIDAK' || raw === 'TID') return 'TIDAK LOLOS';
+  if (raw.includes('LOLOS') || raw.includes('LULUS') || raw.includes('DITERIMA')) return 'LOLOS';
+  return 'UNKNOWN';
+}
+
+function highlightText(text, query) {
+  const source = String(text ?? '');
+  const q = cleanText(query);
+  if (!q) return escapeHtml(source);
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escapeHtml(source).replace(new RegExp(escaped, 'ig'), (m) => `<mark class="bg-amber-100 text-inherit px-0.5 rounded">${m}</mark>`);
+}
+
+function resolveField(headers, aliases) {
+  const normalizedHeaders = headers.map((header) => ({ raw: header, normalized: normalizeHeader(header) }));
+  for (const alias of aliases) {
+    const normalizedAlias = normalizeHeader(alias);
+    const exact = normalizedHeaders.find((item) => item.normalized === normalizedAlias);
+    if (exact) return exact.raw;
+  }
+  for (const alias of aliases) {
+    const normalizedAlias = normalizeHeader(alias);
+    const partial = normalizedHeaders.find((item) => item.normalized.includes(normalizedAlias) || normalizedAlias.includes(item.normalized));
+    if (partial) return partial.raw;
+  }
+  return '';
+}
+
+function buildFieldMap(headers) {
+  return {
+    nama: resolveField(headers, FIELD_ALIASES.nama),
+    kontak: resolveField(headers, FIELD_ALIASES.kontak),
+    sekolah: resolveField(headers, FIELD_ALIASES.sekolah),
+    kelas: resolveField(headers, FIELD_ALIASES.kelas),
+    guru: resolveField(headers, FIELD_ALIASES.guru),
+    status: resolveField(headers, FIELD_ALIASES.status)
+  };
+}
+
+function getValue(row, key) {
+  return cleanText(key && row ? row[key] : '');
+}
+
+function mapRow(row, fields, index) {
+  const nama = getValue(row, fields.nama);
+  const kontak = normalizePhone(getValue(row, fields.kontak));
+  const sekolah = getValue(row, fields.sekolah);
+  const kelas = getValue(row, fields.kelas);
+  const guruRaw = getValue(row, fields.guru);
+  const guruPhone = normalizePhone(extractPhoneFromText(guruRaw));
+  const guru = stripPhoneFromText(guruRaw);
+  const statusRaw = getValue(row, fields.status);
+  const status = classifyStatus(statusRaw);
+  const notes = [];
+
+  if (!nama) notes.push('Nama kosong');
+  if (!statusRaw) notes.push('Status kosong');
+  if (kontak && !isPhoneLikelyValid(kontak)) notes.push('Nomor peserta perlu cek');
+  if (guruPhone && !isPhoneLikelyValid(guruPhone)) notes.push('Nomor guru perlu cek');
+  if (status === 'UNKNOWN') notes.push('Status perlu cek');
+
+  return {
+    _rowNumber: index + 2,
+    nama,
+    namaKey: normalizeKey(nama),
+    kontak,
+    sekolah,
+    sekolahKey: normalizeKey(sekolah),
+    kelas,
+    guru,
+    guruPhone,
+    statusRaw,
+    status,
+    notes,
+    isKept: false,
+    needsReview: false,
+    conflictStatus: false,
+    duplicateGroupSize: 1,
+    duplicateGroupKey: '',
+    searchIndex: ''
+  };
+}
+
+function getIdentity(item) {
+  const hasValidPhone = isPhoneLikelyValid(item.kontak);
+  if (hasValidPhone && item.namaKey) return `np:${item.namaKey}|${item.kontak}`;
+  if (hasValidPhone) return `p:${item.kontak}`;
+  if (item.namaKey && item.sekolahKey) return `ns:${item.namaKey}|${item.sekolahKey}`;
+  if (item.namaKey) return `n:${item.namaKey}`;
+  if (item.kontak) return `rawp:${item.kontak}`;
+  return `row:${item._rowNumber}`;
+}
+
+function getRowScore(item) {
+  let score = 0;
+  if (item.nama) score += 3;
+  if (item.sekolah) score += 2;
+  if (item.kelas) score += 1;
+  if (item.guru && item.guru !== '-') score += 1;
+  if (item.status !== 'UNKNOWN') score += 2;
+  if (isPhoneLikelyValid(item.kontak)) score += 3;
+  if (isPhoneLikelyValid(item.guruPhone)) score += 1;
+  return score;
+}
+
+function chooseBestRow(items) {
+  return items.reduce((best, current) => {
+    if (!best) return current;
+    const bestScore = getRowScore(best);
+    const currentScore = getRowScore(current);
+    if (currentScore > bestScore) return current;
+    if (currentScore < bestScore) return best;
+    if (best.status !== current.status) {
+      if (current.status === 'LOLOS') return current;
+      if (best.status === 'LOLOS') return best;
+      if (current.status === 'TIDAK LOLOS' && best.status === 'UNKNOWN') return current;
+      if (best.status === 'TIDAK LOLOS' && current.status === 'UNKNOWN') return best;
+    }
+    return current._rowNumber < best._rowNumber ? current : best;
+  }, null);
+}
+
+function buildSearchIndex(item) {
+  return [
+    item.nama, item.kontak, item.sekolah, item.kelas, item.guru, item.guruPhone, item.statusRaw, item.status,
+    item.isKept ? 'masuk index' : 'tersaring'
+  ].join(' ').toLowerCase();
+}
+
+function processRows(rawRows, fields) {
+  const mappedRows = rawRows.map((row, index) => mapRow(row, fields, index));
+  const groups = new Map();
+
+  for (const item of mappedRows) {
+    const key = getIdentity(item);
+    item.duplicateGroupKey = key;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+
+  const duplicateExamples = [];
+  const conflictExamples = [];
+  const invalidPhoneExamples = [];
+  let duplicateFiltered = 0;
+  let duplicateGroups = 0;
+  let conflictGroups = 0;
+  let invalidPhoneCount = 0;
+  let unknownStatusCount = 0;
+
+  for (const items of groups.values()) {
+    const winner = chooseBestRow(items);
+    const statuses = [...new Set(items.map((item) => item.status).filter((status) => status !== 'UNKNOWN'))];
+    const hasConflict = statuses.length > 1;
+    const hasDuplicate = items.length > 1;
+
+    if (hasDuplicate) {
+      duplicateGroups += 1;
+      duplicateFiltered += items.length - 1;
+      if (duplicateExamples.length < 8) {
+        const sample = winner || items[0];
+        duplicateExamples.push(`${sample.nama || '(tanpa nama)'} • ${sample.sekolah || '-'} • ${items.length} baris`);
+      }
+    }
+
+    if (hasConflict) {
+      conflictGroups += 1;
+      if (conflictExamples.length < 8) {
+        const sample = winner || items[0];
+        conflictExamples.push(`${sample.nama || '(tanpa nama)'} • ${statuses.join(' / ')}`);
+      }
+    }
+
+    items.forEach((item) => {
+      item.duplicateGroupSize = items.length;
+      item.conflictStatus = hasConflict;
+      item.isKept = winner === item;
+      if (!item.isKept && hasDuplicate) item.notes.push('Tersaring dedup');
+      if (hasConflict) item.notes.push('Konflik status');
+      if (item.kontak && !isPhoneLikelyValid(item.kontak)) invalidPhoneCount += 1;
+      if (!item.kontak || !isPhoneLikelyValid(item.kontak)) {
+        if (invalidPhoneExamples.length < 8) invalidPhoneExamples.push(`${item.nama || '(tanpa nama)'} • ${item.kontak || '-'}`);
+      }
+      if (item.status === 'UNKNOWN') unknownStatusCount += 1;
+      item.needsReview = item.notes.some((note) => note !== 'Tersaring dedup');
+      item.searchIndex = buildSearchIndex(item);
+    });
+  }
+
+  const finalRows = mappedRows.filter((item) => item.isKept);
+  const schools = new Set(finalRows.map((item) => item.sekolahKey).filter(Boolean));
+  const lolosCount = finalRows.filter((item) => item.status === 'LOLOS').length;
+  const tidakLolosCount = finalRows.filter((item) => item.status === 'TIDAK LOLOS').length;
+  const reviewCount = finalRows.filter((item) => item.needsReview).length;
+
+  return {
+    mappedRows,
+    finalRows,
+    stats: {
+      totalRaw: mappedRows.length,
+      totalFinal: finalRows.length,
+      duplicateFiltered,
+      duplicateGroups,
+      conflictGroups,
+      invalidPhoneCount,
+      unknownStatusCount,
+      reviewCount,
+      lolosCount,
+      tidakLolosCount,
+      schoolsCount: schools.size,
+      duplicateExamples,
+      conflictExamples,
+      invalidPhoneExamples
+    }
+  };
+}
+
+async function fetchCsvText(urls) {
+  let lastError = null;
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      if (!text || text.trim().startsWith('<!DOCTYPE html')) throw new Error('Respon bukan CSV');
+      return text;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error('CSV Google Sheets tidak bisa diambil');
+}
+
+function setLoadingState(isLoading) {
+  el.loadingState.classList.toggle('hidden', !isLoading);
+  el.refreshButton.disabled = isLoading;
+  el.downloadPdfButton.disabled = isLoading;
+}
+
+function setError(message = '') {
+  el.errorState.classList.toggle('hidden', !message);
+  el.errorMessage.textContent = message;
+  if (message) {
+    el.tableWrapper.classList.add('hidden');
+    el.emptyState.classList.add('hidden');
+  }
+}
+
+function enterApp() {
+  el.loginScreen.classList.add('hidden');
+  el.appShell.classList.remove('hidden');
+}
+
+function renderSummary() {
+  const stats = state.stats;
+  if (!stats) return;
+
+  el.summaryTotalRaw.textContent = stats.totalRaw;
+  el.summaryTotalFinal.textContent = stats.totalFinal;
+  el.summaryDuplicates.textContent = stats.duplicateFiltered;
+  el.summaryReview.textContent = stats.reviewCount;
+  el.summaryLolos.textContent = stats.lolosCount;
+  el.summaryTidakLolos.textContent = stats.tidakLolosCount;
+  el.summarySchools.textContent = stats.schoolsCount;
+  el.summaryDuplicateGroups.textContent = stats.duplicateGroups;
+  el.summaryConflicts.textContent = stats.conflictGroups;
+  el.summaryInvalidPhone.textContent = stats.invalidPhoneCount;
+  el.summaryUnknownStatus.textContent = stats.unknownStatusCount;
+
+  el.duplicateExampleList.innerHTML = stats.duplicateExamples.length ? stats.duplicateExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
+  el.conflictExampleList.innerHTML = stats.conflictExamples.length ? stats.conflictExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
+  el.invalidPhoneList.innerHTML = stats.invalidPhoneExamples.length ? stats.invalidPhoneExamples.map(v => `<div>${escapeHtml(v)}</div>`).join('') : '-';
+}
+
+function getFilteredRows() {
+  const query = cleanText(el.searchInput.value).toLowerCase();
+  if (!query) return state.mappedRows;
+  return state.mappedRows.filter(item => item.searchIndex.includes(query));
+}
+
+function renderTable() {
+  state.filteredRows = getFilteredRows();
+  el.tableBody.innerHTML = '';
+
+  if (!state.filteredRows.length) {
+    el.tableWrapper.classList.add('hidden');
+    el.emptyState.classList.remove('hidden');
+    el.tableInfo.textContent = `0 dari ${state.mappedRows.length} baris`;
+    return;
+  }
+
+  const query = el.searchInput.value;
+  const html = state.filteredRows.map((item) => {
+    const notes = [...item.notes];
+    const noteHtml = notes.length
+      ? notes.map(note => `<span class="inline-flex px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 text-[11px] font-black mr-1 mb-1">${escapeHtml(note)}</span>`).join('')
+      : '<span class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-black">Bersih</span>';
+
+    const includeBadge = item.isKept
+      ? '<span class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-black">YA</span>'
+      : '<span class="inline-flex px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] font-black">TIDAK</span>';
+
+    const finalStatusText = item.isKept ? item.status : 'TERSARING';
+    const finalStatusClass = item.isKept
+      ? (item.status === 'LOLOS' ? 'text-emerald-600' : item.status === 'TIDAK LOLOS' ? 'text-amber-600' : 'text-slate-600')
+      : 'text-slate-500';
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition-all align-top">
+        <td class="px-6 py-5 text-sm font-bold text-slate-500">${item._rowNumber}</td>
+        <td class="px-6 py-5">${includeBadge}</td>
+        <td class="px-6 py-5"><div class="font-bold text-slate-800">${highlightText(item.nama || '-', query)}</div></td>
+        <td class="px-6 py-5"><div class="font-medium text-slate-700">${highlightText(item.kontak || '-', query)}</div></td>
+        <td class="px-6 py-5"><div class="font-medium text-slate-700">${highlightText(item.sekolah || '-', query)}</div></td>
+        <td class="px-6 py-5"><div class="font-medium text-slate-500">${highlightText(item.kelas || '-', query)}</div></td>
+        <td class="px-6 py-5"><div class="font-medium text-slate-700">${highlightText(item.guru || '-', query)}</div></td>
+        <td class="px-6 py-5"><div class="font-medium text-slate-700">${highlightText(item.guruPhone || '-', query)}</div></td>
+        <td class="px-6 py-5"><div class="font-medium text-slate-500">${highlightText(item.statusRaw || '-', query)}</div></td>
+        <td class="px-6 py-5"><div class="font-black ${finalStatusClass}">${highlightText(finalStatusText, query)}</div></td>
+        <td class="px-6 py-5">${noteHtml}</td>
+      </tr>
+    `;
+  }).join('');
+
+  el.tableBody.innerHTML = html;
+  el.tableWrapper.classList.remove('hidden');
+  el.emptyState.classList.add('hidden');
+  el.tableInfo.textContent = `${state.filteredRows.length} dari ${state.mappedRows.length} baris`;
+}
+
+function scheduleSearchRender() {
+  clearTimeout(state.searchTimer);
+  state.searchTimer = setTimeout(renderTable, APP_CONFIG.searchDebounceMs);
+}
+
+function sanitizeParsedRows(parsedRows) {
+  return (parsedRows || [])
+    .slice(0, APP_CONFIG.maxRows)
+    .map((row) => {
+      const cleaned = {};
+      for (const [key, value] of Object.entries(row || {})) {
+        if (cleanText(key)) cleaned[key] = cleanText(value);
+      }
+      return cleaned;
+    })
+    .filter((row) => Object.values(row).some((value) => cleanText(value)));
+}
+
+async function loadAudit() {
+  setLoadingState(true);
+  setError('');
+
+  try {
+    const csvText = await fetchCsvText(participantCsvUrls);
+    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: 'greedy', dynamicTyping: false });
+    const rows = sanitizeParsedRows(parsed.data);
+    const headers = Object.keys(rows[0] || parsed.meta.fields || {});
+    const fields = buildFieldMap(headers);
+    const processed = processRows(rows, fields);
+
+    state.rawRows = rows;
+    state.headers = headers;
+    state.fields = fields;
+    state.mappedRows = processed.mappedRows;
+    state.filteredRows = processed.mappedRows;
+    state.finalRows = processed.finalRows;
+    state.stats = processed.stats;
+
+    renderSummary();
+    renderTable();
+  } catch (error) {
+    console.error(error);
+    state.rawRows = [];
+    state.filteredRows = [];
+    state.mappedRows = [];
+    state.finalRows = [];
+    state.stats = null;
+    setError(`Gagal memuat audit. Detail: ${error.message}`);
+  } finally {
+    setLoadingState(false);
+  }
+}
+
+function resetAccessGate({ clearData = false } = {}) {
+  el.loginScreen.classList.remove('hidden');
+  el.appShell.classList.add('hidden');
+  el.passwordInput.value = '';
+  el.loginError.classList.add('hidden');
+
+  if (clearData) {
+    state.rawRows = [];
+    state.mappedRows = [];
+    state.filteredRows = [];
+    state.finalRows = [];
+    state.stats = null;
+    el.searchInput.value = '';
+    el.tableBody.innerHTML = '';
+    el.tableInfo.textContent = '0 baris';
+    ['summaryTotalRaw','summaryTotalFinal','summaryDuplicates','summaryReview','summaryLolos','summaryTidakLolos','summarySchools','summaryDuplicateGroups','summaryConflicts','summaryInvalidPhone','summaryUnknownStatus'].forEach((key) => {
+      el[key].textContent = '0';
+    });
+    el.duplicateExampleList.innerHTML = '-';
+    el.conflictExampleList.innerHTML = '-';
+    el.invalidPhoneList.innerHTML = '-';
+    el.tableWrapper.classList.add('hidden');
+    el.emptyState.classList.add('hidden');
+    setError('');
+    setLoadingState(false);
+  }
+
+  requestAnimationFrame(() => el.passwordInput.focus());
+}
+
+function buildAuditPdfHtml() {
+  const generatedAt = new Date().toLocaleString('id-ID');
+  const stats = state.stats || {};
+  const rowHtml = state.mappedRows.map((item, index) => {
+    const finalStatus = item.isKept ? item.status : 'TERSARING';
+    const notes = item.notes.length ? item.notes.join(', ') : 'Bersih';
+    return `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item._rowNumber}</td>
+        <td>${escapeHtml(item.isKept ? 'YA' : 'TIDAK')}</td>
+        <td>${escapeHtml(item.nama || '-')}</td>
+        <td>${escapeHtml(item.kontak || '-')}</td>
+        <td>${escapeHtml(item.sekolah || '-')}</td>
+        <td>${escapeHtml(item.kelas || '-')}</td>
+        <td>${escapeHtml(item.guru || '-')}</td>
+        <td>${escapeHtml(item.guruPhone || '-')}</td>
+        <td>${escapeHtml(item.statusRaw || '-')}</td>
+        <td>${escapeHtml(finalStatus)}</td>
+        <td>${escapeHtml(notes)}</td>
+      </tr>`;
+  }).join('');
+
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<title>Audit Data Admin</title>
+<style>
+  @page { size: A4 landscape; margin: 10mm; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  .meta { color: #475569; font-size: 12px; margin-bottom: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 12px; }
+  .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; }
+  .label { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .08em; }
+  .value { font-size: 18px; font-weight: 700; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: fixed; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 6px; vertical-align: top; word-break: break-word; }
+  th { background: #f8fafc; text-align: left; }
+</style>
+</head>
+<body>
+  <h1>Audit Data Admin - Full Visible</h1>
+  <div class="meta">Dicetak: ${generatedAt}</div>
+  <div class="stats">
+    <div class="card"><div class="label">Data Masuk</div><div class="value">${stats.totalRaw || 0}</div></div>
+    <div class="card"><div class="label">Final Index</div><div class="value">${stats.totalFinal || 0}</div></div>
+    <div class="card"><div class="label">Duplikat</div><div class="value">${stats.duplicateFiltered || 0}</div></div>
+    <div class="card"><div class="label">Review</div><div class="value">${stats.reviewCount || 0}</div></div>
+    <div class="card"><div class="label">Lolos</div><div class="value">${stats.lolosCount || 0}</div></div>
+    <div class="card"><div class="label">Tidak Lolos</div><div class="value">${stats.tidakLolosCount || 0}</div></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Baris</th>
+        <th>Masuk Index</th>
+        <th>Nama</th>
+        <th>WA Peserta</th>
+        <th>Sekolah</th>
+        <th>Kelas</th>
+        <th>Guru</th>
+        <th>WA Guru</th>
+        <th>Status Asli</th>
+        <th>Status Final</th>
+        <th>Catatan</th>
+      </tr>
+    </thead>
+    <tbody>${rowHtml}</tbody>
+  </table>
+</body>
+</html>`;
+}
+
+function downloadPdf() {
+  if (!state.mappedRows.length || !state.stats) {
+    alert('Data audit belum dimuat.');
+    return;
+  }
+  const printWindow = window.open('', '_blank', 'width=1600,height=900');
+  if (!printWindow) {
+    alert('Popup diblokir browser. Izinkan popup untuk download PDF.');
+    return;
+  }
+  printWindow.document.open();
+  printWindow.document.write(buildAuditPdfHtml());
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => printWindow.print(), 500);
+}
+
+function initAuth() {
+  resetAccessGate();
+
+  el.loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const password = el.passwordInput.value;
+
+    if (password === ADMIN_PASSWORD) {
+      el.loginError.classList.add('hidden');
+      enterApp();
+      el.passwordInput.value = '';
+      await loadAudit();
+      return;
+    }
+
+    el.loginError.classList.remove('hidden');
+    el.passwordInput.focus();
+    el.passwordInput.select();
+  });
+
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) resetAccessGate({ clearData: true });
+  });
+}
+
+function attachEvents() {
+  el.lockButton.addEventListener('click', () => resetAccessGate({ clearData: true }));
+  el.refreshButton.addEventListener('click', loadAudit);
+  el.downloadPdfButton.addEventListener('click', downloadPdf);
+  el.searchInput.addEventListener('input', scheduleSearchRender);
+  el.clearSearchButton.addEventListener('click', () => {
+    el.searchInput.value = '';
+    renderTable();
+    el.searchInput.focus();
+  });
+}
+
+attachEvents();
+initAuth();
+</script>
+</body>
+</html>
